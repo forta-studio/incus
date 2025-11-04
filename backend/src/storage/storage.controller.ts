@@ -35,11 +35,11 @@ import {
 import { FileType } from './interfaces/storage.interface';
 
 @Controller('storage')
-@UseGuards(AuthGuard, RolesGuard)
 export class StorageController {
   constructor(private readonly storageService: StorageService) {}
 
   @Post('images/upload')
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles('ADMIN', 'CUSTOMER')
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(
@@ -61,6 +61,7 @@ export class StorageController {
   }
 
   @Post('audio/upload')
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles('ADMIN')
   @UseInterceptors(FileInterceptor('file'))
   async uploadAudio(
@@ -72,6 +73,7 @@ export class StorageController {
   }
 
   @Post('presigned-url')
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles('ADMIN', 'CUSTOMER')
   async generatePresignedUrl(@Body() presignedUrlDto: PresignedUrlDto) {
     return await this.storageService.generatePresignedUploadUrl(
@@ -82,6 +84,7 @@ export class StorageController {
   }
 
   @Get('images/:id')
+  @UseGuards(OptionalAuthGuard)
   async getImage(
     @Param('id') id: string,
     @Response({ passthrough: true }) res: ExpressResponse,
@@ -198,6 +201,7 @@ export class StorageController {
   }
 
   @Get('downloads/:id')
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles('ADMIN', 'CUSTOMER')
   async getDownloadFile(
     @Param('id') id: string,

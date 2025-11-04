@@ -60,7 +60,7 @@ html {
 
   /* Custom Dark Color Palette */
   --background: oklch(0.13 0 0); /* #111111 */
-  --card: oklch(0.133 0 0); /* #1C1C1C */
+  --card: oklch(20.505% 0.00198 286.056); /* #1C1C1C */
   --shadow: oklch(0.046 0 0); /* #0A0A0A */
   --foreground: oklch(93.163% 0.01268 86.803); /* #F4F3F1 */
   --white: oklch(100% 0.00011 271.152); /* #F4F3F1 */

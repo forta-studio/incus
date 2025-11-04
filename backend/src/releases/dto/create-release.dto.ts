@@ -34,22 +34,20 @@ export class CreateReleaseDto {
   @MaxLength(255)
   slug: string;
 
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(255)
-  displayArtist: string;
-
   @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  displayArtist?: string;
+
   @IsDateString()
-  releaseDate?: string;
+  releaseDate: string;
 
   @IsEnum(ReleaseType)
   type: ReleaseType;
 
-  @IsOptional()
   @IsString()
   @MaxLength(2000)
-  description?: string;
+  description: string;
 
   @IsUUID()
   artistId: string;

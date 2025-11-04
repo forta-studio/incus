@@ -4,6 +4,7 @@ import "./globals.css";
 import CustomCursor from "@/components/ui/CustomCursor";
 import Header from "@/components/Header";
 import Container from "@/components/ui/Container";
+import ReactQueryProvider from "@/providers/ReactQueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,28 +31,29 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Container>
-          <main className="flex flex-col min-h-screen">
-            <Header />
-            <div className="flex-1">{children}</div>
-            <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-              <p>
-                © 2025 Incus Audio | A{" "}
-                <a
-                  href="https://www.vaxalab.co.uk"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:no-underline"
-                >
-                  VäxaLab
-                </a>{" "}
-                production
-              </p>
-            </footer>
-          </main>
-        </Container>
-
-        <CustomCursor />
+        <ReactQueryProvider>
+          <Container>
+            <main className="flex flex-col min-h-screen">
+              <Header />
+              <div className="flex-1">{children}</div>
+              <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
+                <p>
+                  © 2025 Incus Audio | A{" "}
+                  <a
+                    href="https://www.vaxalab.co.uk"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:no-underline"
+                  >
+                    VäxaLab
+                  </a>{" "}
+                  production
+                </p>
+              </footer>
+            </main>
+          </Container>
+          <CustomCursor />
+        </ReactQueryProvider>
       </body>
     </html>
   );

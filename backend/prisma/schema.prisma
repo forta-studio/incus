@@ -188,6 +188,7 @@ model Release {
   @@index([title])
   @@index([slug])
   @@index([title, slug])
+  @@index([type])
   @@index([artistId])
   @@index([bannerImageId])
   @@index([createdAt])

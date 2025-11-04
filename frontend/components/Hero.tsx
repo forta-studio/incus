@@ -6,7 +6,7 @@ const Hero: React.FC = () => {
       className="hero"
       style={{
         backgroundColor: '#242a2c',
-        paddingBottom: '650px'
+        paddingBottom: '46%'
       }}
     >
       {/* Hero content placeholder */}
