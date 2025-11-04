@@ -4,7 +4,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
 
-// Fragment shader for the distortion and heat effect
+// Fragment shader for the distortion, desaturation and chromatic aberration effect
 const fragmentShader = `
   uniform sampler2D uTexture;
   uniform vec2 uMouse;
@@ -14,7 +14,7 @@ const fragmentShader = `
   
   varying vec2 vUv;
   
-  // Noise function for heat effect
+  // Noise function for subtle distortion
   float random(vec2 st) {
     return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
   }
@@ -34,11 +34,10 @@ const fragmentShader = `
   }
   
   void main() {
-    // Use UV coordinates directly - they should already be properly mapped
     vec2 uv = vUv;
     
     // Calculate distance from mouse
-    vec2 mousePos = (uMouse + 1.0) * 0.5; // Convert from -1,1 to 0,1
+    vec2 mousePos = (uMouse + 1.0) * 0.5;
     float dist = distance(vUv, mousePos);
     
     // Create distortion effect - warp toward mouse
@@ -53,44 +52,44 @@ const fragmentShader = `
       uv += direction * factor * distortionStrength;
     }
     
-    // Sample the texture
-    vec4 color = texture2D(uTexture, uv);
-    
-    // Base image should be at normal brightness when not hovered
-    vec3 baseColor = color.rgb;
-    
-    // Heat/burn effect
-    float heat = smoothstep(0.3, 0.0, dist) * uHover;
-    
-    // Add noise for heat distortion
-    float noiseValue = noise(uv * 10.0 + uTime * 2.0) * 0.1;
-    heat += noiseValue * uHover * 0.5;
-    
-    // Start with the base color (normal brightness)
-    vec3 finalColor = baseColor;
+    // Base color without chromatic aberration
+    vec4 baseColor = texture2D(uTexture, uv);
+    vec3 finalColor = baseColor.rgb;
     
     // Only apply effects when hovering
     if (uHover > 0.0) {
-      // Brighten highlights and add warmth
-      vec3 heated = baseColor;
+      // Calculate effect intensity based on distance from mouse
+      float effectIntensity = smoothstep(0.4, 0.0, dist) * uHover;
       
-      // Increase brightness
-      heated = mix(heated, heated * 1.3, heat);
+      // Add subtle noise for organic feel
+      float noiseValue = noise(uv * 8.0 + uTime * 1.5) * 0.02;
+      effectIntensity += noiseValue * uHover * 0.3;
       
-      // Add warm tint (more red/orange)
-      heated.r = mix(heated.r, min(heated.r * 1.2, 1.0), heat);
-      heated.g = mix(heated.g, min(heated.g * 1.1, 1.0), heat);
-      heated.b = mix(heated.b, heated.b * 0.9, heat);
+      // Chromatic aberration - sample RGB channels separately with more dramatic offsets
+      float aberrationStrength = effectIntensity * 0.015; // Increased from 0.003 to 0.015
       
-      // Add subtle glow
-      float glow = smoothstep(0.4, 0.0, dist) * uHover * 0.2;
-      heated += vec3(glow * 0.3, glow * 0.2, glow * 0.1);
+      // Create more pronounced RGB separation with both horizontal and vertical offsets
+      vec2 redOffset = vec2(-aberrationStrength * 1.2, aberrationStrength * 0.3);
+      vec2 greenOffset = vec2(0.0, -aberrationStrength * 0.2);
+      vec2 blueOffset = vec2(aberrationStrength * 1.2, aberrationStrength * 0.5);
       
-      // Blend between base and heated based on hover amount
-      finalColor = mix(baseColor, heated, uHover);
+      float r = texture2D(uTexture, uv + redOffset).r;
+      float g = texture2D(uTexture, uv + greenOffset).g;
+      float b = texture2D(uTexture, uv + blueOffset).b;
+      
+      vec3 chromaticColor = vec3(r, g, b);
+      
+      // Desaturation effect
+      vec3 desaturated = vec3(dot(chromaticColor, vec3(0.299, 0.587, 0.114)));
+      
+      // Mix between chromatic color and desaturated based on effect intensity (reduced from 0.8 to 0.4)
+      vec3 processedColor = mix(chromaticColor, desaturated, effectIntensity * 0.4);
+      
+      // Blend the processed color with the base color
+      finalColor = mix(baseColor.rgb, processedColor, uHover);
     }
     
-    gl_FragColor = vec4(finalColor, color.a);
+    gl_FragColor = vec4(finalColor, baseColor.a);
   }
 `;
 
