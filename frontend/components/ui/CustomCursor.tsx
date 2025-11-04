@@ -23,52 +23,59 @@ export default function CustomCursor() {
 
     window.addEventListener("mousemove", move);
 
-    // Hover states
-    const links = document.querySelectorAll("a, button, [data-hover]");
     const cursorInner = cursor.querySelector("div");
 
-    links.forEach((el) => {
-      const handleLinkEnter = (): void => {
+    // Use event delegation instead of querying elements
+    const handleMouseEnter = (e: Event): void => {
+      const target = e.target as HTMLElement;
+      if (target.matches("a, button, [data-hover]")) {
         gsap.to(cursorInner, {
           width: "20px",
           height: "20px",
           duration: 0.2,
           ease: "power3.out",
         });
-      };
+      }
+    };
 
-      const handleLinkLeave = (): void => {
+    const handleMouseLeave = (e: Event): void => {
+      const target = e.target as HTMLElement;
+      if (target.matches("a, button, [data-hover]")) {
         gsap.to(cursorInner, {
           width: "32px",
           height: "32px",
           duration: 0.3,
           ease: "power3.out",
         });
-      };
+      }
+    };
 
-      const handleMouseDown = (): void => {
+    const handleMouseDown = (e: Event): void => {
+      const target = e.target as HTMLElement;
+      if (target.matches("a, button, [data-hover]")) {
         gsap.to(cursorInner, { width: "14px", height: "14px", duration: 0.1 });
-      };
+      }
+    };
 
-      const handleMouseUp = (): void => {
+    const handleMouseUp = (e: Event): void => {
+      const target = e.target as HTMLElement;
+      if (target.matches("a, button, [data-hover]")) {
         gsap.to(cursorInner, { width: "20px", height: "20px", duration: 0.2 });
-      };
+      }
+    };
 
-      el.addEventListener("mouseenter", handleLinkEnter);
-      el.addEventListener("mouseleave", handleLinkLeave);
-      el.addEventListener("mousedown", handleMouseDown);
-      el.addEventListener("mouseup", handleMouseUp);
-    });
+    // Use event delegation on document
+    document.addEventListener("mouseenter", handleMouseEnter, true);
+    document.addEventListener("mouseleave", handleMouseLeave, true);
+    document.addEventListener("mousedown", handleMouseDown, true);
+    document.addEventListener("mouseup", handleMouseUp, true);
 
     return () => {
       window.removeEventListener("mousemove", move);
-      // Clean up event listeners on links
-      links.forEach((el) => {
-        el.removeEventListener("mouseenter", () => {});
-        el.removeEventListener("mouseleave", () => {});
-        el.removeEventListener("mousedown", () => {});
-        el.removeEventListener("mouseup", () => {});
-      });
+      document.removeEventListener("mouseenter", handleMouseEnter, true);
+      document.removeEventListener("mouseleave", handleMouseLeave, true);
+      document.removeEventListener("mousedown", handleMouseDown, true);
+      document.removeEventListener("mouseup", handleMouseUp, true);
     };
   }, []);
 
