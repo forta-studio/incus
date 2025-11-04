@@ -1,5 +1,5 @@
 import type { Release } from "@/lib/types";
-import Image from "next/image";
+import HoverEffectImage from "./HoverEffectImage";
 
 interface ReleaseCardProps {
   release: Release;
@@ -7,13 +7,6 @@ interface ReleaseCardProps {
 
 const ReleaseCard: React.FC<ReleaseCardProps> = ({ release }) => {
   const firstImage = release.images?.[0];
-
-  // Custom loader for Next.js Image component (uses dedicated image API route)
-  const imageLoader = ({ src }: { src: string }) => {
-    return `/api/storage/images/${src}`;
-  };
-
-  console.log("firstImage", firstImage);
 
   return (
     <div className="relative">
@@ -24,10 +17,9 @@ const ReleaseCard: React.FC<ReleaseCardProps> = ({ release }) => {
       <div className="relative bg-card">
         <div>
           {firstImage ? (
-            <Image
-              src={firstImage.id}
+            <HoverEffectImage
+              src={`/api/storage/images/${firstImage.id}`}
               alt={firstImage.alt || release.title}
-              loader={imageLoader}
               width={firstImage.width || 500}
               height={firstImage.height || 500}
               className="w-full h-auto"
