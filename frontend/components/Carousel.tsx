@@ -35,14 +35,16 @@ const slides: Slide[] = [
 
 export default function HeroCarousel(): React.JSX.Element {
   const [current, setCurrent] = useState<number>(0);
-  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
-  const bgRef = useRef<HTMLDivElement>(null);
+  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const containerRef = useRef<HTMLElement>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const autoplayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Get current slide colors
+  const currentColors = slides[current].colors;
 
   const changeSlide = useCallback(
     (newIndex: number) => {
@@ -149,6 +151,25 @@ export default function HeroCarousel(): React.JSX.Element {
     return () => ctx.revert();
   }, [current, isTransitioning]);
 
+  // 🖱️ Subtle mouse tracking
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth) * 100;
+      const y = (e.clientY / window.innerHeight) * 100;
+
+      // Make mouse following more subtle by reducing the range and adding center bias
+      const centerX = 50;
+      const centerY = 50;
+      const subtleX = centerX + (x - centerX) * 0.2; // Reduce movement to 20% of actual
+      const subtleY = centerY + (y - centerY) * 0.3;
+
+      setMousePos({ x: subtleX, y: subtleY });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
   // 🔄 Autoplay functionality
   useEffect(() => {
     if (isTransitioning) return;
@@ -170,136 +191,139 @@ export default function HeroCarousel(): React.JSX.Element {
         clearTimeout(autoplayTimeoutRef.current);
       }
     };
-  }, [current, isTransitioning]);
-
-  // 🎨 Update gradient colors when slide changes
-  useEffect(() => {
-    if (!bgRef.current) return;
-
-    const currentColors = slides[current].colors;
-    gsap.to(bgRef.current, {
-      background: `
-        radial-gradient(circle at ${mousePos.x * 100}% ${mousePos.y * 100}%, 
-          ${currentColors[0]}35 0%, 
-          ${currentColors[1]}25 25%, 
-          ${currentColors[2]}18 50%, 
-          ${currentColors[3]}12 75%, 
-          transparent 100%),
-        linear-gradient(135deg, 
-          ${currentColors[0]}45 0%, 
-          ${currentColors[1]}35 25%, 
-          ${currentColors[2]}25 50%, 
-          ${currentColors[3]}18 75%, 
-          transparent 100%),
-        linear-gradient(45deg, 
-          ${currentColors[3]}25 0%, 
-          transparent 50%, 
-          ${currentColors[0]}18 100%)
-      `,
-      duration: 1.2,
-      ease: "power2.inOut",
-    });
-  }, [current, mousePos]);
-
-  // 🖱️ Mouse movement for gradient interaction
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent): void => {
-      const x = e.clientX / window.innerWidth;
-      const y = e.clientY / window.innerHeight;
-      setMousePos({ x, y });
-
-      if (!bgRef.current) return;
-
-      const currentColors = slides[current].colors;
-      gsap.to(bgRef.current, {
-        background: `
-          radial-gradient(circle at ${x * 100}% ${y * 100}%, 
-            ${currentColors[0]}40 0%, 
-            ${currentColors[1]}30 25%, 
-            ${currentColors[2]}22 50%, 
-            ${currentColors[3]}15 75%, 
-            transparent 100%),
-          linear-gradient(135deg, 
-            ${currentColors[0]}45 0%, 
-            ${currentColors[1]}35 25%, 
-            ${currentColors[2]}25 50%, 
-            ${currentColors[3]}18 75%, 
-            transparent 100%),
-          linear-gradient(45deg, 
-            ${currentColors[3]}30 0%, 
-            transparent 50%, 
-            ${currentColors[0]}20 100%)
-        `,
-        duration: 0.6,
-        ease: "power2.out",
-      });
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [current]);
+  }, [current, isTransitioning, nextSlide]);
 
   return (
-    <section
-      ref={containerRef}
-      className="relative h-[65vh] flex items-center justify-center overflow-hidden"
-    >
-      {/* Shader Background */}
-      <div
-        ref={bgRef}
-        className="absolute inset-0"
-        style={{
-          background: `
-            radial-gradient(circle at ${mousePos.x * 100}% ${
-            mousePos.y * 100
-          }%, 
-              ${slides[current].colors[0]}40 0%, 
-              ${slides[current].colors[1]}30 25%, 
-              ${slides[current].colors[2]}22 50%, 
-              ${slides[current].colors[3]}15 75%, 
+    <>
+      {/* Global styles for noise animations */}
+      <style jsx global>{`
+        @keyframes noiseMove {
+          0% {
+            transform: translate(0px, 0px);
+          }
+          25% {
+            transform: translate(-25px, -30px);
+          }
+          50% {
+            transform: translate(-50px, -20px);
+          }
+          75% {
+            transform: translate(-35px, -45px);
+          }
+          100% {
+            transform: translate(-60px, -60px);
+          }
+        }
+
+        @keyframes noiseMove2 {
+          0% {
+            transform: translate(0px, 0px) rotate(0deg);
+          }
+          25% {
+            transform: translate(30px, -20px) rotate(0.5deg);
+          }
+          50% {
+            transform: translate(-15px, 40px) rotate(-0.3deg);
+          }
+          75% {
+            transform: translate(45px, 25px) rotate(0.8deg);
+          }
+          100% {
+            transform: translate(60px, 60px) rotate(1deg);
+          }
+        }
+      `}</style>
+
+      <section
+        ref={containerRef}
+        className="relative h-[65vh] flex items-center justify-center overflow-hidden"
+      >
+        {/* Animated Background */}
+        <div
+          className="absolute inset-0 transition-all duration-1000 ease-out"
+          style={{
+            background: `
+            radial-gradient(circle at ${mousePos.x}% ${mousePos.y}%, 
+              ${currentColors[0]}25 0%, 
+              ${currentColors[1]}20 25%, 
+              ${currentColors[2]}15 50%, 
+              ${currentColors[3]}10 75%, 
               transparent 100%),
             linear-gradient(135deg, 
-              ${slides[current].colors[0]}45 0%, 
-              ${slides[current].colors[1]}35 25%, 
-              ${slides[current].colors[2]}25 50%, 
-              ${slides[current].colors[3]}18 75%, 
+              ${currentColors[0]}45 0%, 
+              ${currentColors[1]}35 25%, 
+              ${currentColors[2]}25 50%, 
+              ${currentColors[3]}18 75%, 
               transparent 100%),
             linear-gradient(45deg, 
-              ${slides[current].colors[3]}30 0%, 
+              ${currentColors[3]}30 0%, 
               transparent 50%, 
-              ${slides[current].colors[0]}20 100%)
+              ${currentColors[0]}20 100%)
           `,
-          transition: "background 1s ease-in-out",
-        }}
-      />
+          }}
+        />
 
-      {/* Dark gradient overlay for contrast */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/15" />
+        {/* Noise Texture Overlay */}
+        <div
+          className="absolute inset-0 opacity-20 mix-blend-overlay"
+          style={{
+            backgroundImage: 'url("/noise.png")',
+            backgroundRepeat: "repeat",
+            backgroundSize: "200px 400px",
+            animation: "noiseMove 15s linear infinite",
+            // Extend beyond viewport to avoid edge visibility
+            width: "120%",
+            height: "120%",
+            top: "-10%",
+            left: "-10%",
+          }}
+        />
 
-      {/* Content */}
-      <div className="relative z-10 max-w-3xl text-center px-6">
-        <h2
-          ref={titleRef}
-          className="text-6xl md:text-5xl font-extrabold text-white tracking-tight mb-6"
-        >
-          {slides[current].title}
-        </h2>
-        <p
-          ref={subtitleRef}
-          className="text-xl md:text-2xl text-white/80 font-light max-w-3xl mx-auto"
-        >
-          {slides[current].subtitle}
-        </p>
-      </div>
+        {/* Secondary Noise Layer for more complexity */}
+        <div
+          className="absolute opacity-12 mix-blend-soft-light"
+          style={{
+            backgroundImage: 'url("/noise.png")',
+            backgroundRepeat: "repeat",
+            backgroundSize: "150px 250px",
+            animation: "noiseMove2 10s linear infinite reverse",
+            // Extend beyond viewport to avoid edge visibility
+            width: "130%",
+            height: "130%",
+            top: "-15%",
+            left: "-15%",
+          }}
+        />
 
-      {/* Navigation Buttons */}
-      <div className="absolute bottom-8 right-8 z-20 flex gap-3">
-        <Button onClick={prevSlide} size="sm" variant="default">
-          <ChevronLeft size={20} />
-        </Button>
-        <Button onClick={nextSlide} size="sm" variant="default">
-          <ChevronRight size={20} />
-        </Button>
-      </div>
-    </section>
+        {/* Dark gradient overlay for contrast */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/3 via-black/1 to-black/5" />
+
+        {/* Content */}
+        <div className="relative z-10 max-w-3xl text-center px-6">
+          <h2
+            ref={titleRef}
+            className="text-6xl md:text-5xl font-extrabold text-white tracking-tight mb-6"
+          >
+            {slides[current].title}
+          </h2>
+          <p
+            ref={subtitleRef}
+            className="text-xl md:text-2xl text-white/80 font-light max-w-3xl mx-auto"
+          >
+            {slides[current].subtitle}
+          </p>
+        </div>
+
+        {/* Navigation Buttons */}
+        <div className="absolute bottom-8 right-8 z-20 flex gap-3">
+          <Button onClick={prevSlide} size="sm" variant="default">
+            <ChevronLeft size={20} />
+          </Button>
+          <Button onClick={nextSlide} size="sm" variant="default">
+            <ChevronRight size={20} />
+          </Button>
+        </div>
+      </section>
+    </>
   );
 }
