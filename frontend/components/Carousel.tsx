@@ -691,7 +691,7 @@ export default function HeroCarousel(): React.JSX.Element {
           style={{
             backgroundImage: 'url("/noise.png")',
             backgroundRepeat: "repeat",
-            backgroundSize: "200px 400px",
+            backgroundSize: "180px 300px",
             animation: "noiseMove 15s linear infinite",
             // Extend beyond viewport to avoid edge visibility
             width: "120%",
@@ -723,7 +723,7 @@ export default function HeroCarousel(): React.JSX.Element {
           style={{
             backgroundImage: 'url("/noise.png")',
             backgroundRepeat: "repeat",
-            backgroundSize: "180px 300px",
+            backgroundSize: "120px 200px",
             animation: "noiseMove3 12s linear infinite",
             // Extend beyond viewport to avoid edge visibility
             width: "125%",
