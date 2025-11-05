@@ -4,7 +4,318 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import SplitType from "split-type";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 import Button from "./ui/Button";
+
+// Same fragment shader as HoverEffectImage
+const fragmentShader = `
+  uniform sampler2D uTexture;
+  uniform vec2 uMouse;
+  uniform float uHover;
+  uniform float uTime;
+  uniform vec2 uResolution;
+  
+  varying vec2 vUv;
+  
+  // Noise function for subtle distortion
+  float random(vec2 st) {
+    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+  }
+  
+  float noise(vec2 st) {
+    vec2 i = floor(st);
+    vec2 f = fract(st);
+    
+    float a = random(i);
+    float b = random(i + vec2(1.0, 0.0));
+    float c = random(i + vec2(0.0, 1.0));
+    float d = random(i + vec2(1.0, 1.0));
+    
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+  }
+  
+  void main() {
+    vec2 uv = vUv;
+    
+    // Calculate distance from mouse
+    vec2 mousePos = (uMouse + 1.0) * 0.5;
+    float dist = distance(vUv, mousePos);
+    
+    // Create distortion effect - warp toward mouse
+    float maxDist = 0.5;
+    float distortionStrength = 0.03 * uHover;
+    
+    if (dist < maxDist) {
+      float factor = (maxDist - dist) / maxDist;
+      factor = smoothstep(0.0, 1.0, factor);
+      
+      vec2 direction = normalize(mousePos - vUv);
+      uv += direction * factor * distortionStrength;
+    }
+    
+    // Base color without chromatic aberration
+    vec4 baseColor = texture2D(uTexture, uv);
+    vec3 finalColor = baseColor.rgb;
+    
+    // Only apply effects when hovering
+    if (uHover > 0.0) {
+      // Calculate effect intensity based on distance from mouse
+      float effectIntensity = smoothstep(0.4, 0.0, dist) * uHover;
+      
+      // Add subtle noise for organic feel
+      float noiseValue = noise(uv * 8.0 + uTime * 1.5) * 0.02;
+      effectIntensity += noiseValue * uHover * 0.3;
+      
+      // Chromatic aberration - sample RGB channels separately with more dramatic offsets
+      float aberrationStrength = effectIntensity * 0.015; // Same as HoverEffectImage
+      
+      // Create more pronounced RGB separation with both horizontal and vertical offsets
+      vec2 redOffset = vec2(-aberrationStrength * 1.2, aberrationStrength * 0.3);
+      vec2 greenOffset = vec2(0.0, -aberrationStrength * 0.2);
+      vec2 blueOffset = vec2(aberrationStrength * 1.2, aberrationStrength * 0.5);
+      
+      float r = texture2D(uTexture, uv + redOffset).r;
+      float g = texture2D(uTexture, uv + greenOffset).g;
+      float b = texture2D(uTexture, uv + blueOffset).b;
+      
+      vec3 chromaticColor = vec3(r, g, b);
+      
+      // Desaturation effect
+      vec3 desaturated = vec3(dot(chromaticColor, vec3(0.299, 0.587, 0.114)));
+      
+      // Mix between chromatic color and desaturated based on effect intensity (same as HoverEffectImage)
+      vec3 processedColor = mix(chromaticColor, desaturated, effectIntensity * 0.4);
+      
+      // Blend the processed color with the base color
+      finalColor = mix(baseColor.rgb, processedColor, uHover);
+    }
+    
+    gl_FragColor = vec4(finalColor, baseColor.a);
+  }
+`;
+
+const vertexShader = `
+  varying vec2 vUv;
+  
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+// Component for the mesh inside Canvas
+interface ShaderTextMeshProps {
+  textTexture: THREE.Texture;
+  width: number;
+  height: number;
+  onHover: (hovered: boolean) => void;
+}
+
+const ShaderTextMesh: React.FC<ShaderTextMeshProps> = ({
+  textTexture,
+  width,
+  height,
+  onHover,
+}) => {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const [mousePos, setMousePos] = useState(new THREE.Vector2(0, 0));
+
+  // Create shader material
+  const shaderMaterial = React.useMemo(() => {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        uTexture: { value: textTexture },
+        uMouse: { value: new THREE.Vector2(0, 0) },
+        uHover: { value: 0 },
+        uTime: { value: 0 },
+        uResolution: { value: new THREE.Vector2(width, height) },
+      },
+      vertexShader,
+      fragmentShader,
+      transparent: true,
+    });
+  }, [textTexture, width, height]);
+
+  useFrame((state) => {
+    if (materialRef.current) {
+      // Animate hover state
+      const targetHover = isHovered ? 1 : 0;
+      materialRef.current.uniforms.uHover.value = THREE.MathUtils.lerp(
+        materialRef.current.uniforms.uHover.value,
+        targetHover,
+        0.1
+      );
+
+      // Update mouse position
+      materialRef.current.uniforms.uMouse.value.lerp(mousePos, 0.1);
+
+      // Update time for noise animation
+      materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+    }
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handlePointerMove = (event: any) => {
+    if (meshRef.current && event.point instanceof THREE.Vector3) {
+      // Convert mouse position to UV coordinates - exact same as HoverEffectImage
+      const localPoint = event.point.clone();
+
+      // Fix mouse coordinate mapping to follow cursor (not mirror)
+      const uvX = (localPoint.x + 1) / 2;
+      const uvY = (localPoint.y + 1) / 2; // Remove the negative to fix mirroring
+
+      // Convert to shader space (-1 to 1)
+      const shaderX = uvX * 2 - 1;
+      const shaderY = uvY * 2 - 1;
+
+      setMousePos(new THREE.Vector2(shaderX, shaderY));
+    }
+  };
+
+  const handlePointerEnter = () => {
+    setIsHovered(true);
+    onHover(true);
+  };
+
+  const handlePointerLeave = () => {
+    setIsHovered(false);
+    onHover(false);
+  };
+
+  return (
+    <mesh
+      ref={meshRef}
+      material={shaderMaterial}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+      onPointerMove={handlePointerMove}
+    >
+      <planeGeometry args={[2, 2]} />
+      <shaderMaterial ref={materialRef} attach="material" {...shaderMaterial} />
+    </mesh>
+  );
+};
+
+// Component for rendering text as texture with shader effects
+interface ShaderTextProps {
+  text: string;
+  fontSize: number;
+  fontWeight: string;
+  color: string;
+  width: number;
+  height: number;
+  className?: string;
+}
+
+const ShaderText: React.FC<ShaderTextProps> = ({
+  text,
+  fontSize,
+  fontWeight,
+  color,
+  width,
+  height,
+  className = "",
+}) => {
+  const [textTexture, setTextTexture] = useState<THREE.Texture | null>(null);
+
+  // Create text texture
+  useEffect(() => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Set canvas size with higher resolution for crisp text
+    const pixelRatio = window.devicePixelRatio || 1;
+    canvas.width = width * pixelRatio;
+    canvas.height = height * pixelRatio;
+
+    ctx.scale(pixelRatio, pixelRatio);
+
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
+
+    // Set text properties
+    ctx.font = `${fontWeight} ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+    ctx.fillStyle = color;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // Enable smooth text rendering
+    ctx.imageSmoothingEnabled = true;
+
+    // Draw text with word wrapping
+    const words = text.split(" ");
+    const lineHeight = fontSize * 1.2;
+    const maxWidth = width - 40; // padding
+    let line = "";
+    const lines: string[] = [];
+
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + words[n] + " ";
+      const metrics = ctx.measureText(testLine);
+      const testWidth = metrics.width;
+
+      if (testWidth > maxWidth && n > 0) {
+        lines.push(line);
+        line = words[n] + " ";
+      } else {
+        line = testLine;
+      }
+    }
+    lines.push(line);
+
+    // Draw lines centered
+    const startY = (height - (lines.length - 1) * lineHeight) / 2;
+    lines.forEach((line, index) => {
+      ctx.fillText(line.trim(), width / 2, startY + index * lineHeight);
+    });
+
+    // Create texture - match HoverEffectImage setup
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.flipY = true; // Fix image orientation like HoverEffectImage
+    texture.format = THREE.RGBAFormat;
+    texture.needsUpdate = true;
+
+    setTextTexture(texture);
+
+    return () => {
+      texture.dispose();
+    };
+  }, [text, fontSize, fontWeight, color, width, height]);
+
+  if (!textTexture) return null;
+
+  return (
+    <div className={`relative ${className}`} style={{ width, height }}>
+      <Canvas
+        orthographic
+        camera={{
+          position: [0, 0, 1],
+          left: -1,
+          right: 1,
+          top: 1,
+          bottom: -1,
+          near: 0.1,
+          far: 10,
+        }}
+        style={{ width: "100%", height: "100%" }}
+        gl={{ antialias: true, alpha: true, preserveDrawingBuffer: true }}
+      >
+        <ShaderTextMesh
+          textTexture={textTexture}
+          width={width}
+          height={height}
+          onHover={() => {}}
+        />
+      </Canvas>
+    </div>
+  );
+};
 
 interface Slide {
   title: string;
@@ -244,10 +555,10 @@ export default function HeroCarousel(): React.JSX.Element {
           style={{
             background: `
             radial-gradient(circle at ${mousePos.x}% ${mousePos.y}%, 
-              ${currentColors[0]}25 0%, 
-              ${currentColors[1]}20 25%, 
-              ${currentColors[2]}15 50%, 
-              ${currentColors[3]}10 75%, 
+              ${currentColors[0]}35 0%, 
+              ${currentColors[1]}28 25%, 
+              ${currentColors[2]}22 50%, 
+              ${currentColors[3]}15 75%, 
               transparent 100%),
             linear-gradient(135deg, 
               ${currentColors[0]}45 0%, 
@@ -299,19 +610,38 @@ export default function HeroCarousel(): React.JSX.Element {
         <div className="absolute inset-0 bg-gradient-to-b from-black/3 via-black/1 to-black/5" />
 
         {/* Content */}
-        <div className="relative z-10 max-w-3xl text-center px-6">
-          <h2
-            ref={titleRef}
-            className="text-6xl md:text-5xl font-extrabold text-white tracking-tight mb-6"
-          >
-            {slides[current].title}
-          </h2>
-          <p
-            ref={subtitleRef}
-            className="text-xl md:text-2xl text-white/80 font-light max-w-3xl mx-auto"
-          >
-            {slides[current].subtitle}
-          </p>
+        <div className="relative z-10 max-w-4xl text-center px-6">
+          {/* Hidden elements for GSAP text animations */}
+          <div className="opacity-0 absolute">
+            <h2 ref={titleRef}>{slides[current].title}</h2>
+            <p ref={subtitleRef}>{slides[current].subtitle}</p>
+          </div>
+
+          {/* Shader-based title */}
+          <div className="mb-6">
+            <ShaderText
+              text={slides[current].title}
+              fontSize={72}
+              fontWeight="800"
+              color="#ffffff"
+              width={800}
+              height={180}
+              className="mx-auto"
+            />
+          </div>
+
+          {/* Shader-based subtitle */}
+          <div>
+            <ShaderText
+              text={slides[current].subtitle}
+              fontSize={24}
+              fontWeight="300"
+              color="rgba(255, 255, 255, 0.8)"
+              width={800}
+              height={120}
+              className="mx-auto"
+            />
+          </div>
         </div>
 
         {/* Navigation Buttons */}
