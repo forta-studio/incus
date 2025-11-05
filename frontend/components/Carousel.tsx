@@ -180,21 +180,21 @@ export default function HeroCarousel(): React.JSX.Element {
     gsap.to(bgRef.current, {
       background: `
         radial-gradient(circle at ${mousePos.x * 100}% ${mousePos.y * 100}%, 
-          ${currentColors[0]}18 0%, 
-          ${currentColors[1]}12 25%, 
-          ${currentColors[2]}08 50%, 
-          ${currentColors[3]}05 75%, 
+          ${currentColors[0]}35 0%, 
+          ${currentColors[1]}25 25%, 
+          ${currentColors[2]}18 50%, 
+          ${currentColors[3]}12 75%, 
           transparent 100%),
         linear-gradient(135deg, 
-          ${currentColors[0]}30 0%, 
-          ${currentColors[1]}22 25%, 
-          ${currentColors[2]}16 50%, 
-          ${currentColors[3]}10 75%, 
+          ${currentColors[0]}45 0%, 
+          ${currentColors[1]}35 25%, 
+          ${currentColors[2]}25 50%, 
+          ${currentColors[3]}18 75%, 
           transparent 100%),
         linear-gradient(45deg, 
-          ${currentColors[3]}12 0%, 
+          ${currentColors[3]}25 0%, 
           transparent 50%, 
-          ${currentColors[0]}08 100%)
+          ${currentColors[0]}18 100%)
       `,
       duration: 1.2,
       ease: "power2.inOut",
@@ -214,21 +214,21 @@ export default function HeroCarousel(): React.JSX.Element {
       gsap.to(bgRef.current, {
         background: `
           radial-gradient(circle at ${x * 100}% ${y * 100}%, 
-            ${currentColors[0]}20 0%, 
-            ${currentColors[1]}15 25%, 
-            ${currentColors[2]}10 50%, 
-            ${currentColors[3]}08 75%, 
+            ${currentColors[0]}40 0%, 
+            ${currentColors[1]}30 25%, 
+            ${currentColors[2]}22 50%, 
+            ${currentColors[3]}15 75%, 
             transparent 100%),
           linear-gradient(135deg, 
-            ${currentColors[0]}30 0%, 
-            ${currentColors[1]}22 25%, 
-            ${currentColors[2]}16 50%, 
-            ${currentColors[3]}10 75%, 
+            ${currentColors[0]}45 0%, 
+            ${currentColors[1]}35 25%, 
+            ${currentColors[2]}25 50%, 
+            ${currentColors[3]}18 75%, 
             transparent 100%),
           linear-gradient(45deg, 
-            ${currentColors[3]}15 0%, 
+            ${currentColors[3]}30 0%, 
             transparent 50%, 
-            ${currentColors[0]}10 100%)
+            ${currentColors[0]}20 100%)
         `,
         duration: 0.6,
         ease: "power2.out",
@@ -252,28 +252,28 @@ export default function HeroCarousel(): React.JSX.Element {
             radial-gradient(circle at ${mousePos.x * 100}% ${
             mousePos.y * 100
           }%, 
-              ${slides[current].colors[0]}20 0%, 
-              ${slides[current].colors[1]}15 25%, 
-              ${slides[current].colors[2]}10 50%, 
-              ${slides[current].colors[3]}08 75%, 
+              ${slides[current].colors[0]}40 0%, 
+              ${slides[current].colors[1]}30 25%, 
+              ${slides[current].colors[2]}22 50%, 
+              ${slides[current].colors[3]}15 75%, 
               transparent 100%),
             linear-gradient(135deg, 
-              ${slides[current].colors[0]}30 0%, 
-              ${slides[current].colors[1]}22 25%, 
-              ${slides[current].colors[2]}16 50%, 
-              ${slides[current].colors[3]}10 75%, 
+              ${slides[current].colors[0]}45 0%, 
+              ${slides[current].colors[1]}35 25%, 
+              ${slides[current].colors[2]}25 50%, 
+              ${slides[current].colors[3]}18 75%, 
               transparent 100%),
             linear-gradient(45deg, 
-              ${slides[current].colors[3]}15 0%, 
+              ${slides[current].colors[3]}30 0%, 
               transparent 50%, 
-              ${slides[current].colors[0]}10 100%)
+              ${slides[current].colors[0]}20 100%)
           `,
           transition: "background 1s ease-in-out",
         }}
       />
 
       {/* Dark gradient overlay for contrast */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/30" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/15" />
 
       {/* Content */}
       <div className="relative z-10 max-w-3xl text-center px-6">
