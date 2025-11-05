@@ -37,6 +37,30 @@ const fragmentShader = `
     return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
   }
   
+  // Edge detection function using Sobel operator
+  float getEdge(sampler2D tex, vec2 uv) {
+    vec2 texelSize = 1.0 / uResolution;
+    
+    // Sample surrounding pixels
+    float tl = length(texture2D(tex, uv + vec2(-texelSize.x, -texelSize.y)).rgb);
+    float tm = length(texture2D(tex, uv + vec2(0.0, -texelSize.y)).rgb);
+    float tr = length(texture2D(tex, uv + vec2(texelSize.x, -texelSize.y)).rgb);
+    
+    float ml = length(texture2D(tex, uv + vec2(-texelSize.x, 0.0)).rgb);
+    float mr = length(texture2D(tex, uv + vec2(texelSize.x, 0.0)).rgb);
+    
+    float bl = length(texture2D(tex, uv + vec2(-texelSize.x, texelSize.y)).rgb);
+    float bm = length(texture2D(tex, uv + vec2(0.0, texelSize.y)).rgb);
+    float br = length(texture2D(tex, uv + vec2(texelSize.x, texelSize.y)).rgb);
+    
+    // Sobel X
+    float sobelX = -tl - 2.0 * ml - bl + tr + 2.0 * mr + br;
+    // Sobel Y
+    float sobelY = -tl - 2.0 * tm - tr + bl + 2.0 * bm + br;
+    
+    return sqrt(sobelX * sobelX + sobelY * sobelY);
+  }
+  
   void main() {
     vec2 uv = vUv;
     
@@ -45,8 +69,8 @@ const fragmentShader = `
     float dist = distance(vUv, mousePos);
     
     // Create distortion effect - warp toward mouse
-    float maxDist = 0.5;
-    float distortionStrength = 0.03 * uHover;
+    float maxDist = 0.8;
+    float distortionStrength = 0.01 * uHover;
     
     if (dist < maxDist) {
       float factor = (maxDist - dist) / maxDist;
@@ -62,32 +86,77 @@ const fragmentShader = `
     
     // Only apply effects when hovering
     if (uHover > 0.0) {
-      // Calculate effect intensity based on distance from mouse
-      float effectIntensity = smoothstep(0.4, 0.0, dist) * uHover;
+      // Calculate effect intensity based on distance from mouse - wider range
+      float effectIntensity = smoothstep(0.6, 0.0, dist) * uHover;
       
       // Add subtle noise for organic feel
       float noiseValue = noise(uv * 8.0 + uTime * 1.5) * 0.02;
       effectIntensity += noiseValue * uHover * 0.3;
       
-      // Chromatic aberration - sample RGB channels separately with more dramatic offsets
-      float aberrationStrength = effectIntensity * 0.015; // Same as HoverEffectImage
+      // Simple layered chromatic aberration with staggered displacement
+      vec3 chromaticColor = baseColor.rgb;
       
-      // Create more pronounced RGB separation with both horizontal and vertical offsets
-      vec2 redOffset = vec2(-aberrationStrength * 1.2, aberrationStrength * 0.3);
-      vec2 greenOffset = vec2(0.0, -aberrationStrength * 0.2);
-      vec2 blueOffset = vec2(aberrationStrength * 1.2, aberrationStrength * 0.5);
+      // Apply chromatic aberration effect
+      if (uHover > 0.0) {
+        // Aberration strength based on effect intensity
+        float aberrationStrength = effectIntensity * 0.08; // Increased for more visibility
+        
+        // Create staggered displacement for each layer
+        float blueStagger = sin(uTime * 2.0) * 0.3 + 0.7; // Oscillates between 0.4 and 1.0
+        float redStagger = sin(uTime * 2.5 + 1.57) * 0.3 + 0.7; // 90 degrees out of phase
+        float whiteStagger = sin(uTime * 3.0 + 3.14) * 0.2 + 0.8; // 180 degrees out of phase, less movement
+        
+        // Calculate displacement with stagger for each layer
+        vec2 blueDisplacement = vec2(0.0);
+        vec2 redDisplacement = vec2(0.0);
+        vec2 whiteDisplacement = vec2(0.0);
+        
+        // Apply mouse-based distortion with staggered timing
+        if (dist < maxDist) {
+          float baseFactor = (maxDist - dist) / maxDist;
+          baseFactor = smoothstep(0.0, 1.0, baseFactor);
+          vec2 direction = normalize(mousePos - vUv);
+          
+          blueDisplacement = direction * baseFactor * distortionStrength * blueStagger;
+          redDisplacement = direction * baseFactor * distortionStrength * redStagger;
+          whiteDisplacement = direction * baseFactor * distortionStrength * whiteStagger;
+        }
+        
+        // Sample layers with both aberration offset and staggered displacement
+        vec4 blueLayer = texture2D(uTexture, vUv + vec2(aberrationStrength, 0.0) + blueDisplacement);
+        vec4 redLayer = texture2D(uTexture, vUv + vec2(-aberrationStrength, 0.0) + redDisplacement);
+        vec4 whiteLayer = texture2D(uTexture, vUv + whiteDisplacement);
+        
+        // Start with blue base color for chromatic layers
+        vec3 layeredColor = vec3(0.341, 0.812, 0.686); // #57CFAF as base
+        
+        // Only apply chromatic layers where there's actual text content
+        if (baseColor.a > 0.0) {
+          // Add blue layer (back layer) - pure blue color where text exists
+          if (blueLayer.a > 0.0) {
+            vec3 blueContent = vec3(0.341, 0.812, 0.686); // Pure #57CFAF
+            layeredColor = mix(layeredColor, blueContent, blueLayer.a * 0.5 * uHover);
+          }
+          
+          // Add red layer (middle layer) - pure red color where text exists
+          if (redLayer.a > 0.0) {
+            vec3 redContent = vec3(0.643, 0.063, 0.161); // Pure #A41029
+            layeredColor = mix(layeredColor, redContent, redLayer.a * 0.8 * uHover);
+          }
+          
+          // Keep white layer on top (original text) - preserve original color at full opacity
+          if (whiteLayer.a > 0.0) {
+            layeredColor = mix(layeredColor, whiteLayer.rgb, whiteLayer.a);
+          }
+        }
+        
+        // Mix with original based on hover strength, but preserve white text opacity
+        chromaticColor = mix(baseColor.rgb, layeredColor, uHover * 0.8);
+      }
       
-      float r = texture2D(uTexture, uv + redOffset).r;
-      float g = texture2D(uTexture, uv + greenOffset).g;
-      float b = texture2D(uTexture, uv + blueOffset).b;
-      
-      vec3 chromaticColor = vec3(r, g, b);
-      
-      // Desaturation effect
+      // Reduced desaturation to keep colors vibrant
       vec3 desaturated = vec3(dot(chromaticColor, vec3(0.299, 0.587, 0.114)));
-      
-      // Mix between chromatic color and desaturated based on effect intensity (same as HoverEffectImage)
-      vec3 processedColor = mix(chromaticColor, desaturated, effectIntensity * 0.4);
+      vec3 processedColor = mix(chromaticColor, desaturated, effectIntensity * 0.1);
       
       // Blend the processed color with the base color
       finalColor = mix(baseColor.rgb, processedColor, uHover);
@@ -127,13 +196,19 @@ const ShaderTextMesh: React.FC<ShaderTextMeshProps> = ({
 
   // Create shader material
   const shaderMaterial = React.useMemo(() => {
+    const canvas = textTexture.source?.data as HTMLCanvasElement;
     return new THREE.ShaderMaterial({
       uniforms: {
         uTexture: { value: textTexture },
         uMouse: { value: new THREE.Vector2(0, 0) },
         uHover: { value: 0 },
         uTime: { value: 0 },
-        uResolution: { value: new THREE.Vector2(width, height) },
+        uResolution: {
+          value: new THREE.Vector2(
+            canvas?.width || width,
+            canvas?.height || height
+          ),
+        },
       },
       vertexShader,
       fragmentShader,
@@ -248,10 +323,10 @@ const ShaderText: React.FC<ShaderTextProps> = ({
     // Enable smooth text rendering
     ctx.imageSmoothingEnabled = true;
 
-    // Draw text with word wrapping
+    // Draw text with word wrapping - increased padding for shader effects
     const words = text.split(" ");
     const lineHeight = fontSize * 1.2;
-    const maxWidth = width - 40; // padding
+    const maxWidth = width - 200; // Increased padding to accommodate chromatic aberration
     let line = "";
     const lines: string[] = [];
 
@@ -543,6 +618,42 @@ export default function HeroCarousel(): React.JSX.Element {
             transform: translate(60px, 60px) rotate(1deg);
           }
         }
+
+        @keyframes noiseMove3 {
+          0% {
+            transform: translate(0px, 0px) rotate(0deg);
+          }
+          25% {
+            transform: translate(-40px, 35px) rotate(-0.7deg);
+          }
+          50% {
+            transform: translate(20px, -25px) rotate(0.4deg);
+          }
+          75% {
+            transform: translate(-30px, -40px) rotate(-0.6deg);
+          }
+          100% {
+            transform: translate(45px, -15px) rotate(0.8deg);
+          }
+        }
+
+        @keyframes noiseMove4 {
+          0% {
+            transform: translate(0px, 0px) rotate(0deg);
+          }
+          25% {
+            transform: translate(15px, 45px) rotate(0.3deg);
+          }
+          50% {
+            transform: translate(-35px, -10px) rotate(-0.5deg);
+          }
+          75% {
+            transform: translate(50px, -35px) rotate(0.9deg);
+          }
+          100% {
+            transform: translate(-20px, 30px) rotate(-0.4deg);
+          }
+        }
       `}</style>
 
       <section
@@ -556,9 +667,9 @@ export default function HeroCarousel(): React.JSX.Element {
             background: `
             radial-gradient(circle at ${mousePos.x}% ${mousePos.y}%, 
               ${currentColors[0]}35 0%, 
-              ${currentColors[1]}28 25%, 
-              ${currentColors[2]}22 50%, 
-              ${currentColors[3]}15 75%, 
+              ${currentColors[1]}32 25%, 
+              ${currentColors[2]}26 50%, 
+              ${currentColors[3]}20 75%, 
               transparent 100%),
             linear-gradient(135deg, 
               ${currentColors[0]}45 0%, 
@@ -574,7 +685,7 @@ export default function HeroCarousel(): React.JSX.Element {
           }}
         />
 
-        {/* Noise Texture Overlay */}
+        {/* Noise Texture Overlay - Layer 1 */}
         <div
           className="absolute inset-0 opacity-20 mix-blend-overlay"
           style={{
@@ -590,7 +701,7 @@ export default function HeroCarousel(): React.JSX.Element {
           }}
         />
 
-        {/* Secondary Noise Layer for more complexity */}
+        {/* Noise Texture Overlay - Layer 2 */}
         <div
           className="absolute opacity-12 mix-blend-soft-light"
           style={{
@@ -606,11 +717,43 @@ export default function HeroCarousel(): React.JSX.Element {
           }}
         />
 
+        {/* Noise Texture Overlay - Layer 3 */}
+        <div
+          className="absolute opacity-8 mix-blend-multiply"
+          style={{
+            backgroundImage: 'url("/noise.png")',
+            backgroundRepeat: "repeat",
+            backgroundSize: "180px 300px",
+            animation: "noiseMove3 12s linear infinite",
+            // Extend beyond viewport to avoid edge visibility
+            width: "125%",
+            height: "125%",
+            top: "-12%",
+            left: "-12%",
+          }}
+        />
+
+        {/* Noise Texture Overlay - Layer 4 */}
+        <div
+          className="absolute opacity-6 mix-blend-screen"
+          style={{
+            backgroundImage: 'url("/noise.png")',
+            backgroundRepeat: "repeat",
+            backgroundSize: "220px 350px",
+            animation: "noiseMove4 18s linear infinite reverse",
+            // Extend beyond viewport to avoid edge visibility
+            width: "135%",
+            height: "135%",
+            top: "-17%",
+            left: "-17%",
+          }}
+        />
+
         {/* Dark gradient overlay for contrast */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/3 via-black/1 to-black/5" />
 
         {/* Content */}
-        <div className="relative z-10 max-w-4xl text-center px-6">
+        <div className="relative z-10 w-full text-center px-6">
           {/* Hidden elements for GSAP text animations */}
           <div className="opacity-0 absolute">
             <h2 ref={titleRef}>{slides[current].title}</h2>
@@ -621,26 +764,18 @@ export default function HeroCarousel(): React.JSX.Element {
           <div className="mb-6">
             <ShaderText
               text={slides[current].title}
-              fontSize={72}
+              fontSize={50}
               fontWeight="800"
               color="#ffffff"
-              width={800}
-              height={180}
+              width={1100}
+              height={100}
               className="mx-auto"
             />
           </div>
 
           {/* Shader-based subtitle */}
           <div>
-            <ShaderText
-              text={slides[current].subtitle}
-              fontSize={24}
-              fontWeight="300"
-              color="rgba(255, 255, 255, 0.8)"
-              width={800}
-              height={120}
-              className="mx-auto"
-            />
+            <h5>{slides[current].subtitle}</h5>
           </div>
         </div>
 
