@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import SplitType from "split-type";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import Button from "./ui/Button";
 
 interface Slide {
   title: string;
@@ -35,35 +36,38 @@ const slides: Slide[] = [
 export default function HeroCarousel(): React.JSX.Element {
   const [current, setCurrent] = useState<number>(0);
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
   const bgRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const containerRef = useRef<HTMLElement>(null);
+  const timelineRef = useRef<gsap.core.Timeline | null>(null);
+  const autoplayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Add noise animation styles
   useEffect(() => {
     const style = document.createElement("style");
     style.textContent = `
-      @keyframes noise {
+      @keyframes noiseAlive {
         0% { 
           background-position: 0px 0px, 0px 0px, 0px 0px, 0px 0px, 0px 0px;
-          opacity: 0.2;
+          transform: translateX(0px) translateY(0px) scale(1);
         }
         25% { 
-          background-position: -1px -1px, 1px 0px, 2px -2px, -1px 1px, 1px -1px;
-          opacity: 0.25;
+          background-position: -0.5px -0.5px, 0.5px 0px, 1px -1px, -0.5px 0.5px, 0.5px -0.5px;
+          transform: translateX(0.3px) translateY(-0.2px) scale(1.001);
         }
         50% { 
-          background-position: 1px 1px, -1px 1px, -2px 2px, 2px -1px, -1px 2px;
-          opacity: 0.15;
+          background-position: 0.5px 0.5px, -0.5px 0.5px, -1px 1px, 1px -0.5px, -0.5px 1px;
+          transform: translateX(-0.2px) translateY(0.3px) scale(0.999);
         }
         75% { 
-          background-position: -1px 0px, 0px -1px, 1px 1px, -2px 0px, 2px 1px;
-          opacity: 0.22;
+          background-position: -0.5px 0px, 0px -0.5px, 0.5px 0.5px, -1px 0px, 1px 0.5px;
+          transform: translateX(0.1px) translateY(-0.1px) scale(1.0005);
         }
         100% { 
-          background-position: 0px 1px, -1px 0px, 0px -2px, 1px 2px, -2px -1px;
-          opacity: 0.18;
+          background-position: 0px 0.5px, -0.5px 0px, 0px -1px, 0.5px 1px, -1px -0.5px;
+          transform: translateX(-0.1px) translateY(0.2px) scale(1);
         }
       }
     `;
@@ -74,71 +78,133 @@ export default function HeroCarousel(): React.JSX.Element {
     };
   }, []);
 
-  const nextSlide = () => {
-    setCurrent((prev) => (prev + 1) % slides.length);
-  };
+  const changeSlide = useCallback(
+    (newIndex: number) => {
+      if (isTransitioning || newIndex === current) return;
 
-  const prevSlide = () => {
-    setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
-  };
+      setIsTransitioning(true);
 
-  // 🔄 Main GSAP animation timeline
+      // Clear any existing autoplay timeout
+      if (autoplayTimeoutRef.current) {
+        clearTimeout(autoplayTimeoutRef.current);
+      }
+
+      // Kill existing timeline
+      if (timelineRef.current) {
+        timelineRef.current.kill();
+      }
+
+      // Animate out current text
+      if (titleRef.current && subtitleRef.current) {
+        const title = new SplitType(titleRef.current, { types: "words" });
+        const subtitle = new SplitType(subtitleRef.current, { types: "words" });
+
+        gsap.to([title.words, subtitle.words], {
+          y: -60,
+          opacity: 0,
+          stagger: 0.02,
+          duration: 0.4,
+          ease: "power2.in",
+          onComplete: () => {
+            title.revert();
+            subtitle.revert();
+            setCurrent(newIndex);
+            setIsTransitioning(false);
+          },
+        });
+      } else {
+        setCurrent(newIndex);
+        setIsTransitioning(false);
+      }
+    },
+    [isTransitioning, current]
+  );
+
+  const nextSlide = useCallback(() => {
+    const newIndex = (current + 1) % slides.length;
+    changeSlide(newIndex);
+  }, [current, changeSlide]);
+
+  const prevSlide = useCallback(() => {
+    const newIndex = (current - 1 + slides.length) % slides.length;
+    changeSlide(newIndex);
+  }, [current, changeSlide]);
+
+  // 🔄 Text animation when slide changes
   useEffect(() => {
+    if (isTransitioning) return;
+
     const ctx = gsap.context(() => {
       if (!titleRef.current || !subtitleRef.current) return;
 
       const title = new SplitType(titleRef.current, { types: "words" });
       const subtitle = new SplitType(subtitleRef.current, { types: "words" });
 
-      const tl = gsap.timeline({
+      // Kill any existing timeline
+      if (timelineRef.current) {
+        timelineRef.current.kill();
+      }
+
+      // Create new timeline
+      timelineRef.current = gsap.timeline({
         defaults: { ease: "power4.out" },
-        onComplete: () => {
-          setTimeout(() => {
-            setCurrent((prev) => (prev + 1) % slides.length);
-          }, 6000);
-        },
       });
 
       // Animate text in
-      tl.from(title.words, {
-        y: 80,
-        opacity: 0,
-        rotateX: 50,
-        transformOrigin: "bottom center",
-        stagger: 0.05,
-        duration: 1.2,
-      }).from(
-        subtitle.words,
-        {
-          y: 40,
+      timelineRef.current
+        .from(title.words, {
+          y: 80,
           opacity: 0,
-          stagger: 0.04,
-          duration: 0.8,
-        },
-        "-=0.8"
-      );
-
-      // Animate text out before next slide
-      tl.to(
-        [title.words, subtitle.words],
-        {
-          y: -60,
-          opacity: 0,
-          stagger: 0.04,
-          duration: 0.8,
-          delay: 3,
-          ease: "power2.in",
-          onComplete: () => {
-            title.revert();
-            subtitle.revert();
+          rotateX: 50,
+          transformOrigin: "bottom center",
+          stagger: 0.05,
+          duration: 1.2,
+        })
+        .from(
+          subtitle.words,
+          {
+            y: 40,
+            opacity: 0,
+            stagger: 0.04,
+            duration: 0.8,
           },
-        },
-        "+=0.5"
-      );
+          "-=0.8"
+        );
+
+      // Clean up function
+      const cleanup = () => {
+        title.revert();
+        subtitle.revert();
+      };
+
+      return cleanup;
     }, containerRef);
 
     return () => ctx.revert();
-  }, [current]);
+  }, [current, isTransitioning]);
+
+  // 🔄 Autoplay functionality
+  useEffect(() => {
+    if (isTransitioning) return;
+
+    // Clear existing timeout
+    if (autoplayTimeoutRef.current) {
+      clearTimeout(autoplayTimeoutRef.current);
+    }
+
+    // Set new timeout for autoplay
+    autoplayTimeoutRef.current = setTimeout(() => {
+      if (!isTransitioning) {
+        nextSlide();
+      }
+    }, 5000);
+
+    return () => {
+      if (autoplayTimeoutRef.current) {
+        clearTimeout(autoplayTimeoutRef.current);
+      }
+    };
+  }, [current, isTransitioning]);
 
   // 🎨 Update gradient colors when slide changes
   useEffect(() => {
@@ -242,29 +308,30 @@ export default function HeroCarousel(): React.JSX.Element {
 
       {/* Noise Texture Overlay */}
       <div
-        className="absolute inset-0 opacity-20"
+        className="absolute inset-0"
         style={{
+          opacity: 0.27,
           background: `
             repeating-linear-gradient(
               0deg,
               transparent,
               transparent 1px,
-              rgba(255, 255, 255, 0.05) 1px,
-              rgba(255, 255, 255, 0.05) 2px
+              rgba(255, 255, 255, 0.4) 1px,
+              rgba(255, 255, 255, 0.4) 2px
             ),
             repeating-linear-gradient(
               90deg,
               transparent,
               transparent 1px,
-              rgba(255, 255, 255, 0.03) 1px,
-              rgba(255, 255, 255, 0.03) 2px
+              rgba(255, 255, 255, 0.35) 1px,
+              rgba(255, 255, 255, 0.35) 2px
             ),
-            radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 1px, transparent 1px),
-            radial-gradient(circle at 75% 75%, rgba(255,255,255,0.08) 1px, transparent 1px),
-            radial-gradient(circle at 50% 100%, rgba(255,255,255,0.06) 1px, transparent 1px)
+            radial-gradient(circle at 25% 25%, rgba(255,255,255,0.5) 1px, transparent 1px),
+            radial-gradient(circle at 75% 75%, rgba(255,255,255,0.45) 1px, transparent 1px),
+            radial-gradient(circle at 50% 100%, rgba(255,255,255,0.4) 1px, transparent 1px)
           `,
           backgroundSize: "3px 3px, 3px 3px, 8px 8px, 12px 12px, 6px 6px",
-          animation: "noise 0.4s infinite linear alternate",
+          animation: "noiseAlive 2s infinite ease-in-out",
         }}
       />
 
@@ -289,22 +356,20 @@ export default function HeroCarousel(): React.JSX.Element {
 
       {/* Navigation Buttons */}
       <div className="absolute bottom-8 right-8 z-20 flex gap-3">
-        <button
+        <Button
           onClick={prevSlide}
-          className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 
-                     flex items-center justify-center text-white hover:bg-white/20 
-                     transition-all duration-300 hover:scale-110"
+          size="sm"
+          variant="default"
         >
           <ChevronLeft size={20} />
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={nextSlide}
-          className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 
-                     flex items-center justify-center text-white hover:bg-white/20 
-                     transition-all duration-300 hover:scale-110"
+          size="sm"
+          variant="default"
         >
           <ChevronRight size={20} />
-        </button>
+        </Button>
       </div>
     </section>
   );
