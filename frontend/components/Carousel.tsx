@@ -44,40 +44,6 @@ export default function HeroCarousel(): React.JSX.Element {
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const autoplayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Add noise animation styles
-  useEffect(() => {
-    const style = document.createElement("style");
-    style.textContent = `
-      @keyframes noiseAlive {
-        0% { 
-          background-position: 0px 0px, 0px 0px, 0px 0px, 0px 0px, 0px 0px;
-          transform: translateX(0px) translateY(0px) scale(1);
-        }
-        25% { 
-          background-position: -0.5px -0.5px, 0.5px 0px, 1px -1px, -0.5px 0.5px, 0.5px -0.5px;
-          transform: translateX(0.3px) translateY(-0.2px) scale(1.001);
-        }
-        50% { 
-          background-position: 0.5px 0.5px, -0.5px 0.5px, -1px 1px, 1px -0.5px, -0.5px 1px;
-          transform: translateX(-0.2px) translateY(0.3px) scale(0.999);
-        }
-        75% { 
-          background-position: -0.5px 0px, 0px -0.5px, 0.5px 0.5px, -1px 0px, 1px 0.5px;
-          transform: translateX(0.1px) translateY(-0.1px) scale(1.0005);
-        }
-        100% { 
-          background-position: 0px 0.5px, -0.5px 0px, 0px -1px, 0.5px 1px, -1px -0.5px;
-          transform: translateX(-0.1px) translateY(0.2px) scale(1);
-        }
-      }
-    `;
-    document.head.appendChild(style);
-
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
   const changeSlide = useCallback(
     (newIndex: number) => {
       if (isTransitioning || newIndex === current) return;
@@ -214,21 +180,21 @@ export default function HeroCarousel(): React.JSX.Element {
     gsap.to(bgRef.current, {
       background: `
         radial-gradient(circle at ${mousePos.x * 100}% ${mousePos.y * 100}%, 
-          ${currentColors[0]}27 0%, 
-          ${currentColors[1]}16 25%, 
-          ${currentColors[2]}13 50%, 
-          ${currentColors[3]}10 75%, 
+          ${currentColors[0]}18 0%, 
+          ${currentColors[1]}12 25%, 
+          ${currentColors[2]}08 50%, 
+          ${currentColors[3]}05 75%, 
           transparent 100%),
         linear-gradient(135deg, 
-          ${currentColors[0]}45 0%, 
-          ${currentColors[1]}35 25%, 
-          ${currentColors[2]}25 50%, 
-          ${currentColors[3]}15 75%, 
+          ${currentColors[0]}30 0%, 
+          ${currentColors[1]}22 25%, 
+          ${currentColors[2]}16 50%, 
+          ${currentColors[3]}10 75%, 
           transparent 100%),
         linear-gradient(45deg, 
-          ${currentColors[3]}20 0%, 
+          ${currentColors[3]}12 0%, 
           transparent 50%, 
-          ${currentColors[0]}15 100%)
+          ${currentColors[0]}08 100%)
       `,
       duration: 1.2,
       ease: "power2.inOut",
@@ -248,21 +214,21 @@ export default function HeroCarousel(): React.JSX.Element {
       gsap.to(bgRef.current, {
         background: `
           radial-gradient(circle at ${x * 100}% ${y * 100}%, 
-            ${currentColors[0]}30 0%, 
-            ${currentColors[1]}20 25%, 
-            ${currentColors[2]}15 50%, 
-            ${currentColors[3]}13 75%, 
+            ${currentColors[0]}20 0%, 
+            ${currentColors[1]}15 25%, 
+            ${currentColors[2]}10 50%, 
+            ${currentColors[3]}08 75%, 
             transparent 100%),
           linear-gradient(135deg, 
-            ${currentColors[0]}45 0%, 
-            ${currentColors[1]}35 25%, 
-            ${currentColors[2]}25 50%, 
-            ${currentColors[3]}15 75%, 
+            ${currentColors[0]}30 0%, 
+            ${currentColors[1]}22 25%, 
+            ${currentColors[2]}16 50%, 
+            ${currentColors[3]}10 75%, 
             transparent 100%),
           linear-gradient(45deg, 
-            ${currentColors[3]}23 0%, 
+            ${currentColors[3]}15 0%, 
             transparent 50%, 
-            ${currentColors[0]}17 100%)
+            ${currentColors[0]}10 100%)
         `,
         duration: 0.6,
         ease: "power2.out",
@@ -286,57 +252,28 @@ export default function HeroCarousel(): React.JSX.Element {
             radial-gradient(circle at ${mousePos.x * 100}% ${
             mousePos.y * 100
           }%, 
-              ${slides[current].colors[0]}30 0%, 
-              ${slides[current].colors[1]}20 25%, 
-              ${slides[current].colors[2]}15 50%, 
-              ${slides[current].colors[3]}13 75%, 
+              ${slides[current].colors[0]}20 0%, 
+              ${slides[current].colors[1]}15 25%, 
+              ${slides[current].colors[2]}10 50%, 
+              ${slides[current].colors[3]}08 75%, 
               transparent 100%),
             linear-gradient(135deg, 
-              ${slides[current].colors[0]}45 0%, 
-              ${slides[current].colors[1]}35 25%, 
-              ${slides[current].colors[2]}25 50%, 
-              ${slides[current].colors[3]}15 75%, 
+              ${slides[current].colors[0]}30 0%, 
+              ${slides[current].colors[1]}22 25%, 
+              ${slides[current].colors[2]}16 50%, 
+              ${slides[current].colors[3]}10 75%, 
               transparent 100%),
             linear-gradient(45deg, 
-              ${slides[current].colors[3]}23 0%, 
+              ${slides[current].colors[3]}15 0%, 
               transparent 50%, 
-              ${slides[current].colors[0]}17 100%)
+              ${slides[current].colors[0]}10 100%)
           `,
           transition: "background 1s ease-in-out",
         }}
       />
 
-      {/* Noise Texture Overlay */}
-      <div
-        className="absolute inset-0"
-        style={{
-          opacity: 0.27,
-          background: `
-            repeating-linear-gradient(
-              0deg,
-              transparent,
-              transparent 1px,
-              rgba(255, 255, 255, 0.4) 1px,
-              rgba(255, 255, 255, 0.4) 2px
-            ),
-            repeating-linear-gradient(
-              90deg,
-              transparent,
-              transparent 1px,
-              rgba(255, 255, 255, 0.35) 1px,
-              rgba(255, 255, 255, 0.35) 2px
-            ),
-            radial-gradient(circle at 25% 25%, rgba(255,255,255,0.5) 1px, transparent 1px),
-            radial-gradient(circle at 75% 75%, rgba(255,255,255,0.45) 1px, transparent 1px),
-            radial-gradient(circle at 50% 100%, rgba(255,255,255,0.4) 1px, transparent 1px)
-          `,
-          backgroundSize: "3px 3px, 3px 3px, 8px 8px, 12px 12px, 6px 6px",
-          animation: "noiseAlive 2s infinite ease-in-out",
-        }}
-      />
-
       {/* Dark gradient overlay for contrast */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/30" />
 
       {/* Content */}
       <div className="relative z-10 max-w-3xl text-center px-6">
@@ -356,18 +293,10 @@ export default function HeroCarousel(): React.JSX.Element {
 
       {/* Navigation Buttons */}
       <div className="absolute bottom-8 right-8 z-20 flex gap-3">
-        <Button
-          onClick={prevSlide}
-          size="sm"
-          variant="default"
-        >
+        <Button onClick={prevSlide} size="sm" variant="default">
           <ChevronLeft size={20} />
         </Button>
-        <Button
-          onClick={nextSlide}
-          size="sm"
-          variant="default"
-        >
+        <Button onClick={nextSlide} size="sm" variant="default">
           <ChevronRight size={20} />
         </Button>
       </div>
