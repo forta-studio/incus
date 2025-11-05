@@ -25,8 +25,8 @@ export default function CustomCursor() {
 
     const cursorInner = cursor.querySelector("div");
 
-    // Use event delegation instead of querying elements
-    const handleMouseEnter = (e: Event): void => {
+    // Use event delegation with mouseover/mouseout (which bubble) instead of mouseenter/mouseleave
+    const handleMouseOver = (e: Event): void => {
       const target = e.target as HTMLElement;
       if (target.matches("a, button, [data-hover]")) {
         gsap.to(cursorInner, {
@@ -38,7 +38,7 @@ export default function CustomCursor() {
       }
     };
 
-    const handleMouseLeave = (e: Event): void => {
+    const handleMouseOut = (e: Event): void => {
       const target = e.target as HTMLElement;
       if (target.matches("a, button, [data-hover]")) {
         gsap.to(cursorInner, {
@@ -65,15 +65,15 @@ export default function CustomCursor() {
     };
 
     // Use event delegation on document
-    document.addEventListener("mouseenter", handleMouseEnter, true);
-    document.addEventListener("mouseleave", handleMouseLeave, true);
+    document.addEventListener("mouseover", handleMouseOver, true);
+    document.addEventListener("mouseout", handleMouseOut, true);
     document.addEventListener("mousedown", handleMouseDown, true);
     document.addEventListener("mouseup", handleMouseUp, true);
 
     return () => {
       window.removeEventListener("mousemove", move);
-      document.removeEventListener("mouseenter", handleMouseEnter, true);
-      document.removeEventListener("mouseleave", handleMouseLeave, true);
+      document.removeEventListener("mouseover", handleMouseOver, true);
+      document.removeEventListener("mouseout", handleMouseOut, true);
       document.removeEventListener("mousedown", handleMouseDown, true);
       document.removeEventListener("mouseup", handleMouseUp, true);
     };

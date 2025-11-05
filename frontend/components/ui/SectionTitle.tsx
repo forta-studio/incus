@@ -27,7 +27,7 @@ const SectionTitle: React.FC<SectionTitleProps> = ({
 
   return (
     <div className="flex items-center justify-between mb-2 p-6">
-      <h2 className="text-2xl font-bold text-foreground">{title}</h2>
+      <h2 className="text-2xl font-extrabold text-foreground">{title}</h2>
       {buttonTitle && (
         <Button
           onClick={handleClick}

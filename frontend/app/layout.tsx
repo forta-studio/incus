@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
+import { mont } from "@/lib/fonts";
 import "./globals.css";
 import CustomCursor from "@/components/ui/CustomCursor";
 import Header from "@/components/Header";
 import Container from "@/components/ui/Container";
 import ReactQueryProvider from "@/providers/ReactQueryProvider";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -29,7 +25,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${mont.variable} ${geistMono.variable} font-sans antialiased`}
+        style={{ fontFamily: "var(--font-mont), system-ui, sans-serif" }}
       >
         <ReactQueryProvider>
           <Container>

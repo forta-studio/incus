@@ -21,7 +21,7 @@ html {
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
   --color-delete: var(--delete);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-mont);
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -107,10 +107,11 @@ html {
     cursor: none;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
     color-scheme: dark;
     position: relative;
     cursor: none;
+    font-family: var(--font-mont), system-ui, sans-serif;
   }
 
   /* Custom text selection color */
