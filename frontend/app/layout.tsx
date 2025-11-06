@@ -34,17 +34,17 @@ export default function RootLayout({
               <Header />
               <div className="flex-1">{children}</div>
               <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-                <p>
+                <p className="text-sm text-center">
                   © 2025 Incus Audio | A{" "}
                   <a
-                    href="https://www.vaxalab.co.uk"
+                    href="https://forta.studio"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="underline hover:no-underline"
                   >
-                    VäxaLab
+                    forta.studio
                   </a>{" "}
-                  production
+                  production.
                 </p>
               </footer>
             </main>

@@ -29,7 +29,7 @@ const LatestReleases: React.FC = () => {
   return (
     <section>
       <SectionTitle title="Latest Releases" buttonTitle="View all releases" />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-6 pb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-8 pb-8">
         {isLoading ? (
           <div className="col-span-full flex justify-center">Loading...</div>
         ) : (

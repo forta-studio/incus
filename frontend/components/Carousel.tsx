@@ -6,6 +6,7 @@ import SplitType from "split-type";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import Link from "next/link";
 import Button from "./ui/Button";
 
 // Same fragment shader as HoverEffectImage
@@ -315,10 +316,11 @@ const ShaderText: React.FC<ShaderTextProps> = ({
     ctx.clearRect(0, 0, width, height);
 
     // Set text properties
-    ctx.font = `${fontWeight} ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+    ctx.font = `${fontWeight} ${fontSize}px Mont, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
     ctx.fillStyle = color;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+    ctx.letterSpacing = "2px";
 
     // Enable smooth text rendering
     ctx.imageSmoothingEnabled = true;
@@ -394,27 +396,36 @@ const ShaderText: React.FC<ShaderTextProps> = ({
 
 interface Slide {
   title: string;
-  subtitle: string;
+  backgroundImage?: string;
+  subtitle?: string;
+  buttonText: string;
+  buttonLink: string;
   colors: string[];
 }
 
 const slides: Slide[] = [
   {
-    title: "New Release: Midnight Frequencies",
-    subtitle:
-      "Experience the latest electronic soundscapes from our featured artists.",
+    backgroundImage: "/album-art-hero.jpg",
+    title: "Midnight Frequencies",
+    subtitle: "Harley Sanders",
+    buttonText: "Listen Now",
+    buttonLink: "/releases/midnight-frequencies",
     colors: ["#6366f1", "#8b5cf6", "#ec4899", "#f59e0b"],
   },
   {
     title: "Premium Sample Packs Available",
-    subtitle:
-      "Elevate your productions with professionally crafted sounds and loops.",
+    backgroundImage: "/album-art-hero.jpg",
+    subtitle: "Incus Audio",
+    buttonText: "Browse Packs",
+    buttonLink: "/sample-packs",
     colors: ["#10b981", "#06b6d4", "#3b82f6", "#8b5cf6"],
   },
   {
     title: "Deep House Chronicles Vol. 3",
-    subtitle:
-      "The third installment of our acclaimed deep house compilation series.",
+    backgroundImage: "/album-art-hero.jpg",
+    subtitle: "Incus Audio",
+    buttonText: "Explore Series",
+    buttonLink: "/releases/deep-house-chronicles-vol-3",
     colors: ["#f59e0b", "#ef4444", "#ec4899", "#8b5cf6"],
   },
 ];
@@ -424,7 +435,7 @@ export default function HeroCarousel(): React.JSX.Element {
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const buttonRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLElement>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const autoplayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -449,11 +460,10 @@ export default function HeroCarousel(): React.JSX.Element {
       }
 
       // Animate out current text
-      if (titleRef.current && subtitleRef.current) {
+      if (titleRef.current && buttonRef.current) {
         const title = new SplitType(titleRef.current, { types: "words" });
-        const subtitle = new SplitType(subtitleRef.current, { types: "words" });
 
-        gsap.to([title.words, subtitle.words], {
+        gsap.to([title.words, buttonRef.current], {
           y: -60,
           opacity: 0,
           stagger: 0.02,
@@ -461,7 +471,6 @@ export default function HeroCarousel(): React.JSX.Element {
           ease: "power2.in",
           onComplete: () => {
             title.revert();
-            subtitle.revert();
             setCurrent(newIndex);
             setIsTransitioning(false);
           },
@@ -489,10 +498,9 @@ export default function HeroCarousel(): React.JSX.Element {
     if (isTransitioning) return;
 
     const ctx = gsap.context(() => {
-      if (!titleRef.current || !subtitleRef.current) return;
+      if (!titleRef.current || !buttonRef.current) return;
 
       const title = new SplitType(titleRef.current, { types: "words" });
-      const subtitle = new SplitType(subtitleRef.current, { types: "words" });
 
       // Kill any existing timeline
       if (timelineRef.current) {
@@ -515,11 +523,10 @@ export default function HeroCarousel(): React.JSX.Element {
           duration: 1.2,
         })
         .from(
-          subtitle.words,
+          buttonRef.current,
           {
             y: 40,
             opacity: 0,
-            stagger: 0.04,
             duration: 0.8,
           },
           "-=0.8"
@@ -528,7 +535,6 @@ export default function HeroCarousel(): React.JSX.Element {
       // Clean up function
       const cleanup = () => {
         title.revert();
-        subtitle.revert();
       };
 
       return cleanup;
@@ -570,7 +576,7 @@ export default function HeroCarousel(): React.JSX.Element {
       if (!isTransitioning) {
         nextSlide();
       }
-    }, 5000);
+    }, 8000);
 
     return () => {
       if (autoplayTimeoutRef.current) {
@@ -749,33 +755,39 @@ export default function HeroCarousel(): React.JSX.Element {
           }}
         />
 
-        {/* Dark gradient overlay for contrast */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/3 via-black/1 to-black/5" />
-
         {/* Content */}
         <div className="relative z-10 w-full text-center px-6">
           {/* Hidden elements for GSAP text animations */}
           <div className="opacity-0 absolute">
             <h2 ref={titleRef}>{slides[current].title}</h2>
-            <p ref={subtitleRef}>{slides[current].subtitle}</p>
+            <div ref={buttonRef}>Hidden Button</div>
           </div>
+
+          <h3
+            className="mb-4 font-black text-lg"
+            style={{ letterSpacing: "0.5px" }}
+          >
+            {slides[current].subtitle}
+          </h3>
 
           {/* Shader-based title */}
           <div className="mb-6">
             <ShaderText
               text={slides[current].title}
-              fontSize={50}
-              fontWeight="800"
-              color="#ffffff"
+              fontSize={45}
+              fontWeight="700"
+              color="#ffffffff"
               width={1100}
               height={100}
               className="mx-auto"
             />
           </div>
 
-          {/* Shader-based subtitle */}
-          <div>
-            <h5>{slides[current].subtitle}</h5>
+          {/* Button */}
+          <div className="flex justify-center">
+            <Link href={slides[current].buttonLink}>
+              <Button>{slides[current].buttonText}</Button>
+            </Link>
           </div>
         </div>
 

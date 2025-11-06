@@ -9,12 +9,12 @@ const ReleaseCard: React.FC<ReleaseCardProps> = ({ release }) => {
   const firstImage = release.images?.[0];
 
   return (
-    <div className="relative">
+    <div className="relative group">
       {/* Background shadow div */}
-      <div className="absolute top-2 left-2 w-full h-full bg-card/70" />
+      <div className="absolute top-2 left-2 w-full h-full bg-card/70 transition-all duration-300 ease-in-out" />
 
       {/* Main card content */}
-      <div className="relative bg-card">
+      <div className="relative bg-card transition-all duration-300 ease-in-out translate-x-0 translate-y-0 group-hover:translate-x-2 group-hover:translate-y-2">
         <div>
           {firstImage ? (
             <HoverEffectImage

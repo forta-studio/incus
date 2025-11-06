@@ -7,14 +7,14 @@ const Logo: React.FC = () => {
       className="group relative inline-block cursor-pointer"
       data-hover
     >
-      {/* Red glitch layer - shifts left on hover */}
+      {/* Red glitch layer - permanently shifted left */}
       <svg
         width="120"
         height="27"
         viewBox="0 0 435 97"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="absolute top-0 left-0 opacity-20 group-hover:opacity-65 transform translate-x-0 group-hover:-translate-x-1 transition-all duration-300 ease-in-out"
+        className="absolute top-0 left-0 opacity-60 transform -translate-x-1"
       >
         <path
           d="M395.939 96.28C371.999 96.28 357.817 84.5703 357.817 64.7938H389.694C389.694 68.8272 392.166 71.1691 395.939 71.1691C399.322 71.1691 401.794 69.3476 401.794 66.0949C401.794 61.2809 395.679 59.8497 388.133 57.8981C375.642 54.7755 358.988 50.7422 358.988 28.884C358.988 10.799 372.39 0 395.289 0C417.797 0 431.068 11.0592 431.068 29.6646H400.363C400.363 26.1517 398.541 24.2001 395.289 24.2001C392.166 24.2001 390.344 25.7614 390.344 28.3636C390.344 32.7872 396.459 34.3485 404.136 36.4303C417.017 39.8131 434.321 44.3669 434.321 65.3143C434.321 84.8305 420.009 96.28 395.939 96.28Z"
@@ -35,14 +35,14 @@ const Logo: React.FC = () => {
         <path d="M0 93.6778V2.60214H30.9657V93.6778H0Z" fill="#CF5777" />
       </svg>
 
-      {/* Blue glitch layer - shifts right on hover */}
+      {/* Blue glitch layer - permanently shifted right */}
       <svg
         width="120"
         height="27"
         viewBox="0 0 435 97"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="absolute top-0 left-0 opacity-20 group-hover:opacity-60 transform translate-x-0 group-hover:translate-x-1 transition-all duration-300 ease-in-out"
+        className="absolute top-0 left-0 opacity-50 transform translate-x-1"
       >
         <path
           d="M395.939 96.28C371.999 96.28 357.817 84.5703 357.817 64.7938H389.694C389.694 68.8272 392.166 71.1691 395.939 71.1691C399.322 71.1691 401.794 69.3476 401.794 66.0949C401.794 61.2809 395.679 59.8497 388.133 57.8981C375.642 54.7755 358.988 50.7422 358.988 28.884C358.988 10.799 372.39 0 395.289 0C417.797 0 431.068 11.0592 431.068 29.6646H400.363C400.363 26.1517 398.541 24.2001 395.289 24.2001C392.166 24.2001 390.344 25.7614 390.344 28.3636C390.344 32.7872 396.459 34.3485 404.136 36.4303C417.017 39.8131 434.321 44.3669 434.321 65.3143C434.321 84.8305 420.009 96.28 395.939 96.28Z"
@@ -70,7 +70,7 @@ const Logo: React.FC = () => {
         viewBox="0 0 435 97"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="relative z-10 text-foreground transition-all duration-300 ease-in-out"
+        className="relative z-10 text-foreground"
       >
         <path
           d="M395.939 96.28C371.999 96.28 357.817 84.5703 357.817 64.7938H389.694C389.694 68.8272 392.166 71.1691 395.939 71.1691C399.322 71.1691 401.794 69.3476 401.794 66.0949C401.794 61.2809 395.679 59.8497 388.133 57.8981C375.642 54.7755 358.988 50.7422 358.988 28.884C358.988 10.799 372.39 0 395.289 0C417.797 0 431.068 11.0592 431.068 29.6646H400.363C400.363 26.1517 398.541 24.2001 395.289 24.2001C392.166 24.2001 390.344 25.7614 390.344 28.3636C390.344 32.7872 396.459 34.3485 404.136 36.4303C417.017 39.8131 434.321 44.3669 434.321 65.3143C434.321 84.8305 420.009 96.28 395.939 96.28Z"
