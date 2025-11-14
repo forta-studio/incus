@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Enable standalone output for Docker builds
+  output: "standalone",
+
   // API proxy removed - now handled by API routes
 
   // Development configuration to handle Three.js + React DevTools conflicts
