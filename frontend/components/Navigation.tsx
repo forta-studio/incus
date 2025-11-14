@@ -40,7 +40,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = "" }) => {
         <div key={link.href} className="flex items-center">
           <Link
             href={link.href}
-            className={`text-foreground hover:line-through transition-all duration-200 ${
+            className={`text-foreground uppercase ${
               isCurrentPage(link) ? "font-bold" : "font-medium"
             }`}
           >
