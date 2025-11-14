@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist_Mono } from "next/font/google";
-import { mont } from "@/lib/fonts";
+import { mont, degradmono } from "@/lib/fonts";
 import "./globals.css";
 import CustomCursor from "@/components/ui/CustomCursor";
 import Header from "@/components/Header";
@@ -25,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${mont.variable} ${geistMono.variable} font-sans antialiased`}
+        className={`${mont.variable} ${degradmono.variable} ${geistMono.variable} font-sans antialiased`}
         style={{ fontFamily: "var(--font-mont), system-ui, sans-serif" }}
       >
         <ReactQueryProvider>

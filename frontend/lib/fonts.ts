@@ -96,3 +96,11 @@ export const mont = localFont({
   variable: "--font-mont",
   display: "swap",
 });
+
+export const degradmono = localFont({
+  src: "../fonts/403degradmono-bold.otf",
+  weight: "700",
+  style: "normal",
+  variable: "--font-degradmono",
+  display: "swap",
+});
