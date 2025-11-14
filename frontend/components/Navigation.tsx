@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef, useEffect } from "react";
 import { gsap } from "gsap";
 import { mont } from "@/lib/fonts";
 
