@@ -326,7 +326,7 @@ const ShaderText: React.FC<ShaderTextProps> = ({
     ctx.imageSmoothingEnabled = true;
 
     // Draw text with word wrapping - increased padding for shader effects
-    const words = text.split(" ");
+    const words = text.toUpperCase().split(" ");
     const lineHeight = fontSize * 1.2;
     const maxWidth = width - 200; // Increased padding to accommodate chromatic aberration
     let line = "";
@@ -407,26 +407,18 @@ const slides: Slide[] = [
   {
     backgroundImage: "/album-art-hero.jpg",
     title: "Midnight Frequencies",
-    subtitle: "Harley Sanders",
+    subtitle: "[ Harley Sanders ]",
     buttonText: "Listen Now",
     buttonLink: "/releases/midnight-frequencies",
-    colors: ["#6366f1", "#8b5cf6", "#ec4899", "#f59e0b"],
+    colors: ["#af34c7ff"],
   },
   {
     title: "Premium Sample Packs Available",
-    backgroundImage: "/album-art-hero.jpg",
-    subtitle: "Incus Audio",
+    backgroundImage: "/album-art-hero-2.jpg",
+    subtitle: "[ Incus Audio ]",
     buttonText: "Browse Packs",
     buttonLink: "/sample-packs",
-    colors: ["#10b981", "#06b6d4", "#3b82f6", "#8b5cf6"],
-  },
-  {
-    title: "Deep House Chronicles Vol. 3",
-    backgroundImage: "/album-art-hero.jpg",
-    subtitle: "Incus Audio",
-    buttonText: "Explore Series",
-    buttonLink: "/releases/deep-house-chronicles-vol-3",
-    colors: ["#f59e0b", "#ef4444", "#ec4899", "#8b5cf6"],
+    colors: ["#2ccfccff"],
   },
 ];
 
@@ -543,7 +535,7 @@ export default function HeroCarousel(): React.JSX.Element {
     return () => ctx.revert();
   }, [current, isTransitioning]);
 
-  // 🖱️ Subtle mouse tracking
+  // 🖱️ Smooth mouse tracking with interpolation
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       const x = (e.clientX / window.innerWidth) * 100;
@@ -664,36 +656,86 @@ export default function HeroCarousel(): React.JSX.Element {
 
       <section
         ref={containerRef}
-        className="relative h-[65vh] flex items-center justify-center overflow-hidden"
+        className="relative flex items-center justify-center overflow-hidden"
+        style={{ height: "min(65vh, 600px)" }}
       >
-        {/* Animated Background */}
-        <div
-          className="absolute inset-0 transition-all duration-1000 ease-out"
-          style={{
-            background: `
-            radial-gradient(circle at ${mousePos.x}% ${mousePos.y}%, 
-              ${currentColors[0]}35 0%, 
-              ${currentColors[1]}32 25%, 
-              ${currentColors[2]}26 50%, 
-              ${currentColors[3]}20 75%, 
-              transparent 100%),
-            linear-gradient(135deg, 
-              ${currentColors[0]}45 0%, 
-              ${currentColors[1]}35 25%, 
-              ${currentColors[2]}25 50%, 
-              ${currentColors[3]}18 75%, 
-              transparent 100%),
-            linear-gradient(45deg, 
-              ${currentColors[3]}30 0%, 
-              transparent 50%, 
-              ${currentColors[0]}20 100%)
-          `,
-          }}
-        />
+        {/* Background Image or Color Gradient */}
+        {slides[current].backgroundImage ? (
+          <>
+            {/* Background Image */}
+            <div
+              className="absolute inset-0 transition-all duration-1000 ease-out"
+              style={{
+                backgroundImage: `url(${slides[current].backgroundImage})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+              }}
+            />
 
+            {/* Blur Overlay */}
+            <div
+              className="absolute inset-0 transition-all duration-1000 ease-out"
+              style={{
+                backdropFilter: "blur(25px)",
+                background: `
+                  radial-gradient(circle at ${mousePos.x}% ${mousePos.y}%, 
+                    ${currentColors[0]}25 0%, 
+                    ${currentColors[1]}20 25%, 
+                    ${currentColors[2]}15 50%, 
+                    ${currentColors[3]}10 75%, 
+                    transparent 100%)
+                `,
+              }}
+            />
+
+            {/* Dark Gradient Overlay */}
+            <div
+              className="absolute inset-0 opacity-15"
+              style={{
+                background: `
+                  linear-gradient(135deg, 
+                    rgba(0, 0, 0, 0.45) 0%, 
+                    rgba(0, 0, 0, 0.35) 25%, 
+                    rgba(0, 0, 0, 0.45) 50%, 
+                    rgba(0, 0, 0, 0.4) 75%, 
+                    rgba(0, 0, 0, 0.6) 100%)
+                `,
+              }}
+            />
+          </>
+        ) : (
+          // Fallback to color gradient when no background image
+          <>
+            {/* Base gradient background */}
+            <div
+              className="absolute inset-0 transition-all duration-1000 ease-out"
+              style={{
+                background: `
+                radial-gradient(circle at ${mousePos.x}% ${mousePos.y}%, 
+                  ${currentColors[0]}35 0%, 
+                  ${currentColors[1]}32 25%, 
+                  ${currentColors[2]}26 50%, 
+                  ${currentColors[3]}20 75%, 
+                  transparent 100%),
+                linear-gradient(135deg, 
+                  ${currentColors[0]}45 0%, 
+                  ${currentColors[1]}35 25%, 
+                  ${currentColors[2]}25 50%, 
+                  ${currentColors[3]}18 75%, 
+                  transparent 100%),
+                linear-gradient(45deg, 
+                  ${currentColors[3]}30 0%, 
+                  transparent 50%, 
+                  ${currentColors[0]}20 100%)
+              `,
+              }}
+            />
+          </>
+        )}{" "}
         {/* Noise Texture Overlay - Layer 1 */}
         <div
-          className="absolute inset-0 opacity-20 mix-blend-overlay"
+          className="absolute opacity-20 mix-blend-overlay"
           style={{
             backgroundImage: 'url("/noise.png")',
             backgroundRepeat: "repeat",
@@ -706,7 +748,6 @@ export default function HeroCarousel(): React.JSX.Element {
             left: "-10%",
           }}
         />
-
         {/* Noise Texture Overlay - Layer 2 */}
         <div
           className="absolute opacity-12 mix-blend-soft-light"
@@ -722,7 +763,6 @@ export default function HeroCarousel(): React.JSX.Element {
             left: "-15%",
           }}
         />
-
         {/* Noise Texture Overlay - Layer 3 */}
         <div
           className="absolute opacity-8 mix-blend-multiply"
@@ -738,7 +778,6 @@ export default function HeroCarousel(): React.JSX.Element {
             left: "-12%",
           }}
         />
-
         {/* Noise Texture Overlay - Layer 4 */}
         <div
           className="absolute opacity-6 mix-blend-screen"
@@ -754,7 +793,6 @@ export default function HeroCarousel(): React.JSX.Element {
             left: "-17%",
           }}
         />
-
         {/* Content */}
         <div className="relative z-10 w-full text-center px-6">
           {/* Hidden elements for GSAP text animations */}
@@ -767,14 +805,14 @@ export default function HeroCarousel(): React.JSX.Element {
             className="mb-4 font-black text-lg"
             style={{ letterSpacing: "0.5px" }}
           >
-            {slides[current].subtitle}
+            {slides[current].subtitle?.toLocaleUpperCase()}
           </h3>
 
           {/* Shader-based title */}
           <div className="mb-6">
             <ShaderText
               text={slides[current].title}
-              fontSize={45}
+              fontSize={40}
               fontWeight="700"
               color="#ffffffff"
               width={1100}
@@ -790,7 +828,6 @@ export default function HeroCarousel(): React.JSX.Element {
             </Link>
           </div>
         </div>
-
         {/* Navigation Buttons */}
         <div className="absolute bottom-8 right-8 z-20 flex gap-3">
           <Button onClick={prevSlide} size="sm" variant="default">

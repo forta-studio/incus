@@ -1,5 +1,7 @@
+import { Search, ShoppingCart } from "lucide-react";
 import Logo from "./Logo";
 import Navigation from "./Navigation";
+import Button from "./ui/Button";
 
 const Header: React.FC = () => {
   return (
@@ -10,8 +12,14 @@ const Header: React.FC = () => {
       <div className="flex-1 px-6">
         <Navigation />
       </div>
-      <div className="px-6">
-        search & cart
+      <div className="px-6 flex items-center space-x-4">
+        <Button variant="default" size="md">
+            <Search size={20} className="mr-2" />
+            <span>Search</span>
+        </Button>
+        <Button variant="default" size="md">
+          <ShoppingCart size={22} />
+        </Button>
       </div>
     </header>
   );

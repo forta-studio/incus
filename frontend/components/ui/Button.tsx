@@ -27,7 +27,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       inline-flex
       items-center
       justify-center
-      font-medium
+      font-semibold
       transition-all
       duration-200
       ease-in-out

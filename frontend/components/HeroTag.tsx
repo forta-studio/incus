@@ -11,7 +11,7 @@ const repeatText = (text: string, count: number) =>
   Array(count).fill(text).join(" • ");
 
 export const HeroTag: React.FC<HeroTagProps> = ({ type }) => {
-  const circleText = repeatText(type, 8);
+  const circleText = repeatText(type.toUpperCase(), 6);
   const svgRef = useRef<SVGSVGElement>(null);
 
   const handleMouseEnter = () => {
@@ -90,7 +90,7 @@ export const HeroTag: React.FC<HeroTagProps> = ({ type }) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        overflow: "visible"
+        overflow: "visible",
       }}
       className="hero-tag"
       onMouseEnter={handleMouseEnter}
@@ -111,7 +111,7 @@ export const HeroTag: React.FC<HeroTagProps> = ({ type }) => {
           lineHeight: "1.1rem",
         }}
       >
-        {type}
+        {type.toUpperCase()}
       </span>
       {/* Circular Text */}
       <svg
@@ -131,13 +131,13 @@ export const HeroTag: React.FC<HeroTagProps> = ({ type }) => {
             d="M55,55 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0"
           />
         </defs>
-        <text fontSize={11} fontWeight={600} letterSpacing={1}>
+        <text fontSize={8} fontWeight={700} letterSpacing={0.55}>
           <textPath
             href="#circlePath"
             startOffset="0"
             className="hero-tag-circle-text"
           >
-            {circleText}
+            {circleText} •
           </textPath>
         </text>
       </svg>
