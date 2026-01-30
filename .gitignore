@@ -1,0 +1,3 @@
+# Production env (secrets). Use .env.production.example as template.
+.env.production
+.DS_Store
