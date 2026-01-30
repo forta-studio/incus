@@ -8,6 +8,8 @@ RUN yarn install --frozen-lockfile --production=false
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# prisma.config.ts requires DATABASE_URL to load; generate does not connect to DB
+ENV DATABASE_URL="postgresql://build:build@localhost:5432/build"
 RUN yarn prisma generate
 RUN yarn build
 
