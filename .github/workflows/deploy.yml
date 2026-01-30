@@ -6,25 +6,25 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: registry.digitalocean.com
-  REGISTRY_NAME: incus-registry
-  BACKEND_IMAGE: incus-registry/incus-backend
-  FRONTEND_IMAGE: incus-registry/incus-frontend
+  REGISTRY: ghcr.io
 
 jobs:
   build-and-push:
     name: Build and Push Images
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Log in to DO Container Registry
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.DO_REGISTRY_TOKEN }}
-          password: ${{ secrets.DO_REGISTRY_TOKEN }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push backend
         uses: docker/build-push-action@v5
@@ -33,8 +33,8 @@ jobs:
           file: ./backend/Dockerfile.prod
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
-            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/incus-backend:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/incus-backend:${{ github.sha }}
 
       - name: Build and push frontend
         uses: docker/build-push-action@v5
@@ -46,8 +46,8 @@ jobs:
             NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
             NEXT_PUBLIC_API_KEY=${{ secrets.NEXT_PUBLIC_API_KEY }}
           tags: |
-            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
-            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/incus-frontend:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/incus-frontend:${{ github.sha }}
 
   deploy:
     name: Deploy to Droplet
@@ -63,8 +63,8 @@ jobs:
           script: |
             cd /var/www/incus
             
-            # Log in to DO Container Registry
-            echo "${{ secrets.DO_REGISTRY_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ secrets.DO_REGISTRY_TOKEN }} --password-stdin
+            # Log in to GitHub Container Registry
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u forta-studio --password-stdin
             
             # Pull latest images
             docker compose -f docker-compose.prod.yml pull
