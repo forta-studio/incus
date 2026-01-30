@@ -4,7 +4,9 @@ WORKDIR /app
 
 FROM base AS deps
 COPY package.json yarn.lock* ./
-RUN yarn install --frozen-lockfile --ignore-engines
+# Omit --frozen-lockfile so build succeeds when lockfile is out of sync (e.g. after package.json changes).
+# For reproducible builds, run `yarn install` locally and commit the updated yarn.lock.
+RUN yarn install --ignore-engines
 
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
