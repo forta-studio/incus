@@ -1,12 +1,10 @@
-version: "3.8"
-
 services:
   backend:
     image: ghcr.io/forta-studio/incus-backend:latest
     container_name: incus_backend
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3001:3001"
+      - "3001:3001"
     env_file:
       - .env.production
     environment:
@@ -18,7 +16,7 @@ services:
     container_name: incus_frontend
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3000:3000"
+      - "3000:3000"
     env_file:
       - .env.production
     environment:
