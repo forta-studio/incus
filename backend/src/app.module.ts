@@ -15,6 +15,8 @@ import { ArtistsModule } from './artists/artists.module';
 import { ReleasesModule } from './releases/releases.module';
 import { PostsModule } from './posts/posts.module';
 import { TracksModule } from './tracks/tracks.module';
+import { FormSubmissionsModule } from './form-submissions/form-submissions.module';
+import { SubmissionsModule } from './submissions/submissions.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { TracksModule } from './tracks/tracks.module';
     ReleasesModule,
     PostsModule,
     TracksModule,
+    FormSubmissionsModule,
+    SubmissionsModule,
   ],
   controllers: [AppController],
   providers: [

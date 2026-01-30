@@ -62,22 +62,22 @@ html {
   --background: oklch(0.13 0 0); /* #111111 */
   --card: oklch(20.505% 0.00198 286.056); /* #1C1C1C */
   --shadow: oklch(0.046 0 0); /* #0A0A0A */
-  --foreground: oklch(93.163% 0.01268 86.803); /* #F4F3F1 */
+  --foreground: oklch(0.93 0.02 86); /* #f3f1ec */
   --white: oklch(100% 0.00011 271.152); /* #F4F3F1 */
   --primary: oklch(0.777 0.127 166.11); /* #57CFAF */
   --secondary: oklch(0.618 0.199 357.99); /* #CF5777 */
   --delete: oklch(0.439 0.175 16.32); /* #A41029 */
 
   /* Derived colors from your palette */
-  --card-foreground: oklch(93.163% 0.01268 86.803);
+  --card-foreground: var(--foreground);
   --popover: oklch(0.133 0 0);
-  --popover-foreground: oklch(93.163% 0.01268 86.803);
+  --popover-foreground: var(--foreground);
   --primary-foreground: oklch(0.13 0 0);
-  --secondary-foreground: oklch(93.163% 0.01268 86.803);
+  --secondary-foreground: var(--foreground);
   --muted: oklch(0.2 0 0);
   --muted-foreground: oklch(0.7 0.004 85.87);
   --accent: oklch(0.133 0 0);
-  --accent-foreground: oklch(93.163% 0.01268 86.803);
+  --accent-foreground: var(--foreground);
   --destructive: oklch(0.439 0.175 16.32);
   --border: oklch(0.25 0 0);
   --input: oklch(0.2 0 0);
@@ -92,11 +92,11 @@ html {
 
   /* Sidebar colors */
   --sidebar: oklch(0.133 0 0);
-  --sidebar-foreground: oklch(93.163% 0.01268 86.803);
+  --sidebar-foreground: var(--foreground);
   --sidebar-primary: oklch(0.777 0.127 166.11);
   --sidebar-primary-foreground: oklch(0.13 0 0);
   --sidebar-accent: oklch(0.2 0 0);
-  --sidebar-accent-foreground: oklch(93.163% 0.01268 86.803);
+  --sidebar-accent-foreground: var(--foreground);
   --sidebar-border: oklch(0.25 0 0);
   --sidebar-ring: oklch(0.777 0.127 166.11);
 }

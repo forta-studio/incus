@@ -21,7 +21,7 @@ const Header: React.FC = () => {
     <>
       <header className="w-full border-b-2 border-foreground bg-background flex items-center">
         <div className="border-r-2 border-foreground px-6 py-4">
-          <Logo />
+        <Logo size="text-4xl" />
         </div>
         <div className="flex-1 px-6">
           <Navigation />

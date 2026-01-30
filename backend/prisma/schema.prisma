@@ -240,7 +240,8 @@ model AudioFile {
   updatedAt    DateTime @updatedAt
 
   // Relations
-  tracks Track[]
+  tracks      Track[]
+  submissions Submission[]
 
   @@index([id])
   @@index([filename])
@@ -633,3 +634,41 @@ model DigitalDownload {
   @@index([createdAt])
   @@map("digital_downloads")
 }
+
+// Contact / Coming Soon form submissions
+model FormSubmission {
+  id          String   @id @default(uuid())
+  name        String
+  email       String
+  message     String?
+  sendCopy    Boolean  @default(false)
+  mailingList Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([email])
+  @@index([createdAt])
+  @@map("form_submissions")
+}
+
+// Demo / Radio audio submissions
+enum SubmissionType {
+  DEMO
+  RADIO
+}
+
+model Submission {
+  id          String         @id @default(uuid())
+  name        String
+  email       String
+  message     String?
+  type        SubmissionType
+  audioFileId String
+  audioFile   AudioFile      @relation(fields: [audioFileId], references: [id])
+  createdAt   DateTime       @default(now())
+
+  @@index([email])
+  @@index([type])
+  @@index([createdAt])
+  @@map("submissions")
+}
+

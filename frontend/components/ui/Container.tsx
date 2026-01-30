@@ -10,7 +10,7 @@ export default function Container({ children, className = '' }: ContainerProps) 
     <div 
       className={`
         w-[85%] 
-        max-w-[1500px] 
+        max-w-[2000px] 
         mx-auto 
         min-h-screen 
         bg-background 

@@ -173,6 +173,48 @@ export class StorageService {
     };
   }
 
+  // Audio uploads specifically for demo/radio submissions (stored under submissions/)
+  async uploadSubmissionAudio(file: Express.Multer.File): Promise<UploadResult> {
+    const metadata = await FileMetadataUtil.getAudioMetadata(
+      file.buffer,
+      file.originalname,
+    );
+
+    const filename = FileMetadataUtil.generateUniqueFilename(file.originalname);
+    const key = `submissions/${filename}`;
+
+    const bucketName = this.buckets[FileType.AUDIO];
+    await this.uploadToS3(bucketName, key, file.buffer, file.mimetype);
+
+    const audioFile = await this.databaseService.audioFile.create({
+      data: {
+        filename,
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+        filesize: file.size,
+        duration: metadata.duration,
+        bitrate: metadata.bitrate,
+        sampleRate: metadata.sampleRate,
+        bucketName,
+        key,
+        url: this.generatePublicUrl(bucketName, key),
+        isPublic: false,
+      },
+    });
+
+    return {
+      id: audioFile.id,
+      filename: audioFile.filename,
+      originalName: audioFile.originalName,
+      mimeType: audioFile.mimeType,
+      filesize: audioFile.filesize,
+      bucketName: audioFile.bucketName,
+      key: audioFile.key,
+      url: audioFile.url,
+      metadata,
+    };
+  }
+
   async uploadDownload(file: Express.Multer.File): Promise<UploadResult> {
     // Generate unique filename
     const filename = FileMetadataUtil.generateUniqueFilename(file.originalname);

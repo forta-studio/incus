@@ -3,7 +3,8 @@ import { Geist_Mono } from "next/font/google";
 import { mont, degradmono } from "@/lib/fonts";
 import "./globals.css";
 import CustomCursor from "@/components/ui/CustomCursor";
-import Header from "@/components/Header";
+import ConditionalHeader from "@/components/ConditionalHeader";
+import ConditionalFooter from "@/components/ConditionalFooter";
 import Container from "@/components/ui/Container";
 import ReactQueryProvider from "@/providers/ReactQueryProvider";
 
@@ -31,22 +32,9 @@ export default function RootLayout({
         <ReactQueryProvider>
           <Container>
             <main className="flex flex-col min-h-screen">
-              <Header />
+              <ConditionalHeader />
               <div className="flex-1">{children}</div>
-              <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-                <p className="text-sm text-center">
-                  © 2025 Incus Audio | A{" "}
-                  <a
-                    href="https://forta.studio"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline hover:no-underline"
-                  >
-                    forta.studio
-                  </a>{" "}
-                  production.
-                </p>
-              </footer>
+              <ConditionalFooter />
             </main>
           </Container>
           <CustomCursor />
