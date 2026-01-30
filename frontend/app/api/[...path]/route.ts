@@ -81,17 +81,17 @@ async function handleRequest(
     const hasBody = ["POST", "PUT", "PATCH"].includes(method);
 
     // Build fetch init, including streaming body for uploads.
-    const fetchInit: RequestInit = {
+    // duplex is a Node fetch extension for streaming request body (not in standard RequestInit).
+    type FetchInitWithDuplex = RequestInit & { duplex?: "half" };
+    const fetchInit: FetchInitWithDuplex = {
       method,
       headers,
       redirect: "manual",
     };
 
     if (hasBody) {
-      // Forward the request body stream. When passing a ReadableStream to
-      // fetch in Node, the 'duplex' option must be set to 'half'.
-      (fetchInit as any).body = request.body;
-      (fetchInit as any).duplex = "half";
+      fetchInit.body = request.body;
+      fetchInit.duplex = "half";
     }
 
     // Make the request to the backend using fetch so we can stream the body
