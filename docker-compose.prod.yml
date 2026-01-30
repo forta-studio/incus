@@ -25,3 +25,18 @@ services:
       - NEXT_PUBLIC_API_KEY=${NEXT_PUBLIC_API_KEY}
     depends_on:
       - backend
+
+  # Prisma Studio (Database GUI) - localhost only for security
+  # Access via SSH tunnel: ssh -L 5555:127.0.0.1:5555 root@YOUR_DROPLET_IP
+  # Then open http://localhost:5555 in your browser
+  prisma-studio:
+    image: ghcr.io/forta-studio/incus-backend:latest
+    container_name: incus_prisma_studio
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5555:5555"
+    env_file:
+      - .env.production
+    command: ["npx", "prisma", "studio", "--hostname", "0.0.0.0", "--port", "5555"]
+    profiles:
+      - tools
