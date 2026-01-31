@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 export interface EmailTemplate {
   to: string;
@@ -11,14 +12,28 @@ export interface EmailTemplate {
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private transporter: nodemailer.Transporter;
+  private transporter: nodemailer.Transporter | null = null;
+  private resend: Resend | null = null;
+  private readonly useResend: boolean;
+  private readonly fromAddress: string;
 
   constructor() {
-    this.createTransporter();
+    this.useResend =
+      process.env.MAIL_PROVIDER === 'resend' &&
+      !!process.env.MAIL_RESEND_API_KEY;
+    this.fromAddress =
+      process.env.MAIL_FROM || '"Incus Audio" <info@incusaudio.com>';
+
+    if (this.useResend) {
+      this.resend = new Resend(process.env.MAIL_RESEND_API_KEY);
+      this.logger.log('Email configured for Resend (HTTPS API)');
+    } else {
+      this.createTransporter();
+    }
   }
 
   private createTransporter() {
-    // MailHog configuration for development
+    // MailHog/SMTP configuration for development
     this.transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST || 'localhost',
       port: parseInt(process.env.MAIL_PORT || '1025'),
@@ -41,13 +56,32 @@ export class EmailService {
   async sendEmail(emailData: EmailTemplate): Promise<boolean> {
     try {
       this.logger.debug(`Attempting to send email to ${emailData.to}`);
-      this.logger.debug(
-        `SMTP Config: ${process.env.MAIL_HOST}:${process.env.MAIL_PORT}`,
-      );
+
+      if (this.useResend && this.resend) {
+        const { data, error } = await this.resend.emails.send({
+          from: this.fromAddress,
+          to: emailData.to,
+          subject: emailData.subject,
+          html: emailData.html,
+          text: emailData.text,
+        });
+
+        if (error) {
+          throw new Error(JSON.stringify(error));
+        }
+
+        this.logger.log(
+          `Email sent successfully to ${emailData.to}: ${data?.id ?? 'ok'}`,
+        );
+        return true;
+      }
+
+      if (!this.transporter) {
+        throw new Error('No email transport configured');
+      }
 
       const info = await this.transporter.sendMail({
-        from:
-          process.env.MAIL_FROM || '"Incus Records" <noreply@incusrecords.com>',
+        from: this.fromAddress,
         to: emailData.to,
         subject: emailData.subject,
         html: emailData.html,
@@ -60,9 +94,11 @@ export class EmailService {
       return true;
     } catch (error) {
       this.logger.error(`Failed to send email to ${emailData.to}:`, error);
-      this.logger.error(
-        `SMTP Config used: ${process.env.MAIL_HOST}:${process.env.MAIL_PORT}`,
-      );
+      if (!this.useResend) {
+        this.logger.error(
+          `SMTP Config used: ${process.env.MAIL_HOST}:${process.env.MAIL_PORT}`,
+        );
+      }
       return false;
     }
   }
