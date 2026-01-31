@@ -427,6 +427,18 @@ export class StorageService {
     });
   }
 
+  async findSubmissionAudioByFilename(filename: string) {
+    // Sanitize: only allow alphanumeric, hyphens, underscores, dots (for extension)
+    const sanitized = filename.replace(/[^a-zA-Z0-9._-]/g, '');
+    if (sanitized !== filename) {
+      return null;
+    }
+    const key = `submissions/${filename}`;
+    return await this.databaseService.audioFile.findFirst({
+      where: { key },
+    });
+  }
+
   async findDownloadFileById(id: string) {
     return await this.databaseService.downloadFile.findUnique({
       where: { id },

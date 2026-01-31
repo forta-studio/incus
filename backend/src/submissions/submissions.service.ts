@@ -52,6 +52,7 @@ export class SubmissionsService {
     type: string;
     createdAt: Date;
     audioFile: {
+      filename: string;
       originalName: string;
       mimeType: string;
       filesize: number;
@@ -64,6 +65,10 @@ export class SubmissionsService {
     const typeLabel =
       submission.type === 'RADIO' ? 'Radio submission' : 'Demo submission';
     const sizeMb = (submission.audioFile.filesize / (1024 * 1024)).toFixed(1);
+
+    // Use proxy URL so admins can play audio via the site (Spaces direct URL gives access denied)
+    const baseUrl = process.env.FRONTEND_URL || 'https://www.incusaudio.com';
+    const audioProxyUrl = `${baseUrl.replace(/\/$/, '')}/api/submissions/${submission.audioFile.filename}`;
 
     await this.emailService.sendEmail({
       to: ownerEmail,
@@ -95,7 +100,7 @@ export class SubmissionsService {
                 }</p>
                 <p style="margin:0 0 8px 0;font-size:13px;"><strong>Size:</strong> ${sizeMb} MB</p>
                 <p style="margin:0;font-size:13px;">
-                  <a href="${submission.audioFile.url}" style="color:#57CFAF; text-decoration:underline;">Open audio file</a>
+                  <a href="${audioProxyUrl}" style="color:#57CFAF; text-decoration:underline;">Open audio file</a>
                 </p>
               </div>
 
@@ -127,11 +132,10 @@ Audio file:
 - Original name: ${submission.audioFile.originalName}
 - Type: ${submission.audioFile.mimeType}
 - Size: ${sizeMb} MB
-- URL: ${submission.audioFile.url}
+- URL: ${audioProxyUrl}
 
 ${submission.message ? `Notes:\n${submission.message}\n` : ''}
       `,
     });
   }
 }
-

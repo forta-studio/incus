@@ -200,6 +200,69 @@ export class StorageController {
     }
   }
 
+  @Get('submissions/stream/:filename')
+  async streamSubmissionAudio(
+    @Param('filename') filename: string,
+    @Request() req: ExpressRequest,
+    @Response({ passthrough: true }) res: ExpressResponse,
+  ) {
+    const audioFile =
+      await this.storageService.findSubmissionAudioByFilename(filename);
+
+    if (!audioFile) {
+      res.status(404);
+      return { error: 'Submission audio not found' };
+    }
+
+    try {
+      const range = req.headers.range;
+
+      if (range) {
+        const parts = range.replace(/bytes=/, '').split('-');
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : undefined;
+
+        const { buffer, contentLength, totalSize } =
+          await this.storageService.getFileRange(
+            audioFile.bucketName,
+            audioFile.key,
+            start,
+            end,
+          );
+
+        const actualEnd = end !== undefined ? end : totalSize - 1;
+
+        res.status(206);
+        res.set({
+          'Content-Type': audioFile.mimeType,
+          'Content-Length': contentLength.toString(),
+          'Content-Range': `bytes ${start}-${actualEnd}/${totalSize}`,
+          'Accept-Ranges': 'bytes',
+          'Cache-Control': 'private, max-age=3600',
+        });
+
+        return new StreamableFile(buffer);
+      }
+
+      const fileBuffer = await this.storageService.getFile(
+        audioFile.bucketName,
+        audioFile.key,
+      );
+
+      res.set({
+        'Content-Type': audioFile.mimeType,
+        'Content-Length': fileBuffer.length.toString(),
+        'Accept-Ranges': 'bytes',
+        'Cache-Control': 'private, max-age=3600',
+      });
+
+      return new StreamableFile(fileBuffer);
+    } catch {
+      res.status(500);
+      return { error: 'Failed to stream audio file' };
+    }
+  }
+
   @Get('downloads/:id')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles('ADMIN', 'CUSTOMER')

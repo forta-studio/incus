@@ -11,4 +11,3 @@ import { EmailModule } from '../email/email.module';
   providers: [SubmissionsService],
 })
 export class SubmissionsModule {}
-
