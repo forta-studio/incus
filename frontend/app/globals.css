@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "locomotive-scroll/dist/locomotive-scroll.css";
 
 /* Force dark mode for browser UI */
 :root {

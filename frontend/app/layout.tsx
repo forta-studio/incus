@@ -6,6 +6,8 @@ import CustomCursor from "@/components/ui/CustomCursor";
 import ConditionalHeader from "@/components/ConditionalHeader";
 import ConditionalFooter from "@/components/ConditionalFooter";
 import Container from "@/components/ui/Container";
+import AccessGate from "@/components/AccessGate";
+import LocomotiveScrollProvider from "@/components/LocomotiveScrollProvider";
 import ReactQueryProvider from "@/providers/ReactQueryProvider";
 
 const geistMono = Geist_Mono({
@@ -31,11 +33,15 @@ export default function RootLayout({
       >
         <ReactQueryProvider>
           <Container>
-            <main className="flex flex-col min-h-screen">
-              <ConditionalHeader />
-              <div className="flex-1">{children}</div>
-              <ConditionalFooter />
-            </main>
+            <AccessGate>
+              <LocomotiveScrollProvider>
+                <main className="flex flex-col min-h-screen" data-scroll-section>
+                  <ConditionalHeader />
+                  <div className="flex-1">{children}</div>
+                  <ConditionalFooter />
+                </main>
+              </LocomotiveScrollProvider>
+            </AccessGate>
           </Container>
           <CustomCursor />
         </ReactQueryProvider>

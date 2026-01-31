@@ -172,7 +172,7 @@ export default function ComingSoonPage() {
         />
       </div>
 
-      <div className="relative z-10 max-w-3xl w-full space-y-10">
+      <div className="relative z-10 max-w-3xl w-full space-y-10 px-4 sm:px-6">
         <div className="flex flex-col items-center text-center space-y-4">
           <div className="scale-150 md:scale-[2]">
             <Logo size="text-4xl" />

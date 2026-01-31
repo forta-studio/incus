@@ -9,13 +9,14 @@ export default function Container({ children, className = '' }: ContainerProps) 
   return (
     <div 
       className={`
-        w-[85%] 
+        w-full
+        md:w-[85%] 
         max-w-[2000px] 
         mx-auto 
         min-h-screen 
         bg-background 
-        border-l-2 
-        border-r-2 
+        md:border-l-2 
+        md:border-r-2 
         border-foreground
         ${className}
       `.trim().replace(/\s+/g, ' ')}
