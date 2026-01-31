@@ -446,10 +446,10 @@ export default function ComingSoonPage() {
               <p className="text-xs leading-relaxed">
                 Prefer direct email? Reach out at{" "}
                 <a
-                  href="mailto:hello@incusaudio.com"
+                  href="mailto:info@incusaudio.com"
                   className="underline hover:no-underline"
                 >
-                  hello@incusaudio.com
+                  info@incusaudio.com
                 </a>
                 .
               </p>
